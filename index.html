@@ -1481,7 +1481,10 @@ function czCard(key,no,it){
   CZI[key]=ans;const ok=store.cz[key]===1;
   return `<div class="cz${ok?' done':''}"><span class="no">${no}</span>${body}<span class="acts">${st.chk&&!ok?'<span class="tag bad">다시</span>':''}${ok?'<span class="tag ok">✓ 완료</span>':''}<button class="chip" data-act="czCheck" data-k="${key}">확인</button></span></div>`;
 }
-function czAll(u){const o=[];SEC[u].forEach(sec=>sec.items.forEach((it,idx)=>{if(hasBlank(it))o.push([u+':'+sec.id+':'+idx,sec,it])}));return o}
+let czCore=true;
+const nBl=it=>it.k==='s'?toks(it.x).filter(t=>t.t==='b').length:it.rows.reduce((a,r)=>a+r.reduce((b,c)=>b+toks(c).filter(t=>t.t==='b').length,0),0);
+function czAll(u){const o=[];SEC[u].forEach(sec=>sec.items.forEach((it,idx)=>{if(!hasBlank(it))return;
+  if(czCore&&((it.i||0)<2||sec.id==='d3'||sec.id==='p3'||nBl(it)>5))return;o.push([u+':'+sec.id+':'+idx,sec,it])}));return o}
 function vCloze(){
   const all=czAll(studyU),dn=all.filter(a=>store.cz[a[0]]===1).length;let no=0;
   const nums=new Map();all.forEach(a=>nums.set(a[0],++no));
@@ -1489,8 +1492,8 @@ function vCloze(){
     const cards=all.filter(a=>a[1]===sec&&(!czOnly||store.cz[a[0]]!==1));
     if(!cards.length)return '';
     return `<section class="sec"><h3>${esc(sec.title)}</h3>${cards.map(a=>czCard(a[0],nums.get(a[0]),a[2])).join('')}</section>`}).join('');
-  return studyShell(`<p class="desc">비어 있는 곳을 직접 써 보세요. (노란 칸 = 핵심 용어 · 빈칸 후보) 틀리면 정답이 초록색으로 보여요. 모두 맞히면 ✓ 완료로 저장돼요.</p>
-  <div class="ctl">${unitChips()}${rangeSelect()}<button class="chip" data-act="czOnly" aria-pressed="${czOnly}">미완료만</button><button class="chip" data-act="czAllChk">보이는 것 전체 확인</button><button class="chip" data-act="czReset">처음부터</button></div>
+  return studyShell(`<p class="desc">비어 있는 곳을 직접 써 보세요. 기본은 ★★(시험 단골) 문장만 나와요. (⭐ 핵심만을 끄면 전체) 틀리면 정답이 초록색으로 보여요. 모두 맞히면 ✓ 완료로 저장돼요.</p>
+  <div class="ctl">${unitChips()}${rangeSelect()}<button class="chip" data-act="czCore" aria-pressed="${czCore}">⭐ 핵심만</button><button class="chip" data-act="czOnly" aria-pressed="${czOnly}">미완료만</button><button class="chip" data-act="czAllChk">보이는 것 전체 확인</button><button class="chip" data-act="czReset">처음부터</button></div>
   <div class="row"><div class="meter" style="flex:1;min-width:120px"><i style="width:${all.length?Math.round(100*dn/all.length):0}%"></i></div><span class="mute">${dn} / ${all.length} 완료</span></div>
   ${html||'<div class="card"><p>🎉 이 범위의 빈칸을 모두 완료했어요!</p></div>'}
   <div class="cta"><button class="btn big" data-act="go" data-v="exam">복습 끝! 모의시험으로 →</button></div>`);
@@ -1679,6 +1682,7 @@ document.addEventListener('click',e=>{
   if(a==='ordreset'){INP[key]=[];render();return}
   if(a==='hltoggle'){HL=!HL;render();return}
   if(a==='hlclear'){Object.keys(store.hl).filter(k=>k.startsWith(studyU+':')).forEach(k=>delete store.hl[k]);save();render();return}
+  if(a==='czCore'){czCore=!czCore;render();return}
   if(a==='czOnly'){czOnly=!czOnly;render();return}
   if(a==='czCheck'){czCheckKeys([b.dataset.k]);return}
   if(a==='czAllChk'){czCheckKeys(Object.keys(CZI).filter(k=>k.startsWith(studyU+':')&&document.querySelector('[data-cz="'+k+'"]')));return}
