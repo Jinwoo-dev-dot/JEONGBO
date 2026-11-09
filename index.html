@@ -1,0 +1,1715 @@
+<title>분할정복 동적계획 노트</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&family=Noto+Serif+KR:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ffffff;--fg:#26241f;--mute:#85817a;--line:#ebe9e3;--card:#f5f5f2;--pill:#efefec;
+  --y1:#ffd93b;--y1t:rgba(255,217,59,.78);--y2:#fff3a6;--y2t:rgba(255,243,166,.9);
+  --hero1:#fff6c4;--hero2:#fffdf0;--heroline:#f5e8a8;
+  --ok:#17824f;--okbg:#e0f5ea;--bad:#c4325a;--badbg:#ffe6ed;--star:#f0a500;
+  --code:#faf9f4;--codefg:#34312a;--paper:#fffefb;--paperline:#d9d4c3;--rule:#e9e5d6;
+  --btn:#ffd93b;--btnfg:#26241f;--shadow:0 1px 2px rgba(60,50,10,.06),0 8px 24px rgba(60,50,10,.07);
+  --f-sans:'Noto Sans KR',system-ui,-apple-system,'Apple SD Gothic Neo',sans-serif;--f-serif:'Noto Serif KR','Batang',serif;--f-mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141412;--fg:#f3f0e6;--mute:#a09b8c;--line:#2f2d27;--card:#1f1e1a;--pill:#25241f;
+  --y1:#f2c919;--y1t:rgba(255,214,0,.55);--y2:#6b5d10;--y2t:rgba(255,226,90,.26);
+  --hero1:#34300f;--hero2:#1b1a12;--heroline:#4a4416;
+  --ok:#74dba7;--okbg:#17332a;--bad:#ff9fb8;--badbg:#431f2c;--star:#ffc233;
+  --code:#1b1a16;--codefg:#eee8d2;--paper:#1c1b17;--paperline:#3b3829;--rule:#2d2b22;
+  --btn:#f2c919;--btnfg:#1d1b12;--shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.3);color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141412;--fg:#f3f0e6;--mute:#a09b8c;--line:#2f2d27;--card:#1f1e1a;--pill:#25241f;
+  --y1:#f2c919;--y1t:rgba(255,214,0,.55);--y2:#6b5d10;--y2t:rgba(255,226,90,.26);
+  --hero1:#34300f;--hero2:#1b1a12;--heroline:#4a4416;
+  --ok:#74dba7;--okbg:#17332a;--bad:#ff9fb8;--badbg:#431f2c;--star:#ffc233;
+  --code:#1b1a16;--codefg:#eee8d2;--paper:#1c1b17;--paperline:#3b3829;--rule:#2d2b22;
+  --btn:#f2c919;--btnfg:#1d1b12;--shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.3);color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-sans);font-size:16px;line-height:1.7;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 80px;word-break:keep-all;overflow-wrap:anywhere}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:30}
+.wrap{max-width:960px;margin:0 auto;display:grid;gap:16px;min-width:0}
+.wrap>*{min-width:0}
+h1,h2,h3,p{margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+/* hero */
+.hero{display:flex;align-items:center;gap:14px;padding:22px 22px;border-radius:22px;background:linear-gradient(135deg,var(--hero1),var(--hero2));border:1px solid var(--heroline);position:relative}
+.hico{flex:none;width:46px;height:46px;border-radius:14px;background:var(--y1);display:grid;place-items:center;color:#26241f}
+.hlab{font-size:13px;color:var(--mute);font-weight:500}
+.hero h1{font-size:28px;line-height:1.3;font-weight:800;letter-spacing:-.02em}
+.u{background:linear-gradient(transparent 62%,var(--y1t) 62%);padding:0 2px}
+.theme{margin-left:auto;flex:none;border:0;background:rgba(255,255,255,.55);width:36px;height:36px;border-radius:50%;font-size:16px}
+:root[data-theme="dark"] .theme{background:rgba(255,255,255,.1)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .theme{background:rgba(255,255,255,.1)}}
+/* tabs */
+.tabs{display:flex;gap:4px;background:var(--pill);padding:5px;border-radius:999px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;border:0;background:transparent;padding:8px 16px;border-radius:999px;font-weight:500;color:var(--mute);white-space:nowrap;line-height:1.3}
+.tab.on{background:var(--y1);color:#26241f;font-weight:700}
+.tab.home{padding:8px 12px}
+.desc{font-size:14px;color:var(--mute)}
+.desc mark{padding:0 4px;border-radius:3px}
+.ctl{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.ctl label{white-space:nowrap;font-size:14px;color:var(--mute);display:flex;gap:8px;align-items:center;min-width:0;max-width:100%}.ctl select{min-width:0;max-width:100%;text-overflow:ellipsis}
+select{font:inherit;font-size:15px;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:7px 10px;max-width:100%}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:5px 14px;font-size:14px;font-weight:500}
+.chip[aria-pressed="true"],.chip.sel{background:var(--y1);border-color:var(--y1);color:#26241f;font-weight:700}
+.chip.dn::after{content:" ✓";color:var(--ok);font-weight:700}
+/* marks */
+mark{color:inherit;border-radius:3px}
+mark.y1{background:linear-gradient(transparent 12%,var(--y1t) 12%);padding:0 2px;font-weight:700}
+mark.y2{background:var(--y2t);padding:0 2px}
+mark.ink{background:var(--y1t);padding:0 1px}
+code{font-family:var(--f-mono);font-size:.88em;background:var(--code);border:1px solid var(--line);padding:0 5px;border-radius:5px}
+/* study */
+.sec{display:grid;gap:10px;grid-template-columns:minmax(0,1fr)}.sec>*{min-width:0}
+.sec>h3{font-size:19px;font-weight:800;display:flex;align-items:center;gap:8px;margin-top:8px}
+.sec>h3::before{content:"";width:5px;height:20px;border-radius:3px;background:var(--y1)}
+.sc{display:flex;gap:12px;align-items:flex-start;background:var(--card);border-radius:16px;padding:14px 16px;min-width:0}
+.sc .no{flex:none;min-width:26px;height:26px;border-radius:50%;background:var(--bg);border:1px solid var(--line);font-size:12px;font-weight:700;display:grid;place-items:center;color:var(--mute);margin-top:2px}
+.sc .tx{flex:1;min-width:0;line-height:2}
+.sc .st{flex:none;color:var(--star);font-size:14px;letter-spacing:-1px;margin-top:3px}
+.qline{border:1.5px dashed var(--heroline);background:var(--hero2);border-radius:14px;padding:10px 14px;font-weight:700}
+.blk{background:var(--card);border-radius:16px;padding:12px 14px;display:grid;gap:8px;min-width:0}
+.blk .bh{display:flex;justify-content:space-between;gap:8px;font-weight:700;font-size:14px;align-items:center}
+.tw{overflow-x:auto;max-width:100%}
+table{border-collapse:collapse;font-size:14.5px;background:var(--bg);border-radius:10px;overflow:hidden;line-height:1.6}
+th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+th{background:var(--pill);font-weight:700;white-space:nowrap}
+pre{margin:0;font-family:var(--f-mono);font-size:13.5px;line-height:1.65;background:var(--code);color:var(--codefg);border:1px solid var(--line);border-radius:12px;padding:12px 14px;overflow-x:auto;max-width:100%;white-space:pre}
+.note{font-size:14px;color:var(--mute)}
+.bar{position:sticky;top:calc(env(safe-area-inset-top,0px) + 6px);z-index:20}
+.meter{height:8px;border-radius:8px;background:var(--pill);overflow:hidden}
+.meter i{display:block;height:100%;background:var(--y1);border-radius:8px}
+.cta{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;padding-top:6px}
+/* buttons */
+.btn{border:0;background:var(--btn);color:var(--btnfg);font-weight:700;border-radius:12px;padding:9px 18px;line-height:1.3}
+.btn.g{background:var(--card);color:var(--fg);border:1px solid var(--line);font-weight:500}
+.btn.k{background:var(--okbg);color:var(--ok)}.btn.r{background:var(--badbg);color:var(--bad)}
+.btn.big{padding:13px 26px;font-size:17px;border-radius:14px}
+.btn:disabled{opacity:.5;cursor:default}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.sp{justify-content:space-between}
+.tag{display:inline-block;font-size:12.5px;padding:1px 10px;border-radius:999px;background:var(--pill);color:var(--mute);font-weight:500}
+.tag.ok{background:var(--okbg);color:var(--ok)}.tag.bad{background:var(--badbg);color:var(--bad)}
+.mute{font-size:14px;color:var(--mute)}
+/* home */
+.homegrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.hbtn{display:grid;gap:6px;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:20px;padding:26px 22px;min-height:150px;align-content:center}
+.hbtn:hover{border-color:var(--y1)}
+.hbtn b{font-size:22px;font-weight:800}.hbtn span{font-size:14px;color:var(--mute)}
+.hbtn .e{font-size:30px}
+.sub{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+/* inputs */
+.fin{font:inherit;font-size:15px;border:0;border-bottom:2px solid var(--y1);background:var(--y2t);color:var(--fg);border-radius:6px 6px 0 0;padding:1px 6px;min-width:3em;max-width:100%}
+.fin:focus{outline:2px solid var(--y1);outline-offset:1px}
+.fin.ok{border-color:var(--ok);background:var(--okbg);color:var(--ok);font-weight:700}
+.fin.bad{border-color:var(--bad);background:var(--badbg);color:var(--bad)}
+.fx{font-size:13px;color:var(--ok);margin-left:4px;font-weight:700}
+textarea,input[type=text],input[type=number]{font:inherit;color:var(--fg);background:var(--bg);border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;width:100%;max-width:100%}
+textarea{min-height:110px;resize:vertical;font-family:var(--f-mono);font-size:14px;line-height:1.7;tab-size:4}
+textarea:focus,input[type=text]:focus,input[type=number]:focus{outline:2px solid var(--y1);border-color:var(--y1)}
+/* czcard */
+.cz{display:flex;gap:12px;align-items:flex-start;background:var(--card);border-radius:16px;padding:14px 16px;flex-wrap:wrap}
+.cz .no{flex:none;min-width:26px;height:26px;border-radius:50%;background:var(--bg);border:1px solid var(--line);font-size:12px;font-weight:700;display:grid;place-items:center;color:var(--mute);margin-top:2px}
+.cz .tx{flex:1 1 240px;min-width:0;line-height:2.3}
+.cz.done{background:var(--okbg)}
+.cz .acts{flex:none;display:flex;gap:6px;align-items:center}
+/* practice cards */
+.card{background:var(--card);border-radius:18px;padding:16px 18px;display:grid;gap:10px;min-width:0}
+.card.btnlike{text-align:left;border:1px solid var(--line);cursor:pointer}
+.card.btnlike:hover{border-color:var(--y1)}
+.card>*{min-width:0}
+.card h3{font-size:18px}
+.intro{white-space:pre-wrap;font-size:14.5px;color:var(--mute)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.qs{display:grid;gap:10px;grid-template-columns:minmax(0,1fr)}
+.q{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:grid;gap:8px;min-width:0;grid-template-columns:minmax(0,1fr)}
+.q>*{min-width:0;max-width:100%}
+.qh{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;font-weight:500}
+.qn{flex:none;width:22px;height:22px;border-radius:50%;background:var(--y1);color:#26241f;font-size:12px;font-weight:800;display:inline-grid;place-items:center}
+.kd{font-size:12px;background:var(--pill);color:var(--mute);border-radius:999px;padding:0 8px}
+.fields{display:grid;gap:8px;grid-template-columns:minmax(0,1fr)}
+.fields label{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:14.5px}
+.blankcode{line-height:2.1}
+.ans{background:var(--hero2);border:1px solid var(--heroline);border-radius:12px;padding:10px 12px;display:grid;gap:6px}
+.mine{white-space:pre-wrap;font-family:var(--f-mono);font-size:13.5px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.miss{display:inline-block;font-size:12.5px;background:var(--badbg);color:var(--bad);border-radius:999px;padding:0 10px;margin:2px 4px 2px 0}
+.msg{color:var(--bad);font-weight:700;font-size:14px}
+.ord{display:grid;gap:6px}
+.ord button{text-align:left;border:1.5px solid var(--line);background:var(--bg);border-radius:10px;padding:6px 12px}
+.ord button:hover{border-color:var(--y1)}
+.ord .picked{display:flex;gap:8px;align-items:flex-start;background:var(--y2t);border-radius:10px;padding:6px 12px}
+.ord .picked.ok{background:var(--okbg)}.ord .picked.bad{background:var(--badbg)}
+.mirror{white-space:pre-wrap;font-family:var(--f-mono);font-size:13px;background:var(--code);border:1px solid var(--line);border-radius:10px;padding:8px 12px;min-height:40px}
+.mirror .w{background:var(--badbg);color:var(--bad);text-decoration:underline wavy}
+.trace{white-space:pre-wrap;font-family:var(--f-mono);font-size:13px;background:var(--code);border:1px solid var(--line);border-radius:10px;padding:10px 12px;overflow-x:auto}
+/* exam */
+.lobby{display:grid;gap:14px}
+.sheetbar{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:8px 16px;box-shadow:var(--shadow)}
+.dots{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.dot{width:12px;height:12px;border-radius:50%;background:var(--pill);border:1px solid var(--line)}
+.dot.on{background:var(--y1);border-color:var(--y1);transform:scale(1.25)}.dot.dn{background:var(--fg);opacity:.35}
+.timer{font-family:var(--f-mono);font-weight:700;font-size:16px}.timer.warn{color:var(--bad)}
+.paper{background:var(--paper);border:1px solid var(--paperline);border-radius:6px;box-shadow:var(--shadow);padding:22px 26px 26px;font-family:var(--f-serif);display:grid;gap:16px;min-width:0}
+.paper>*{min-width:0}
+.ph{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:3px double var(--fg);padding-bottom:10px;font-size:14px;align-items:flex-end}
+.ph .tt{font-size:20px;font-weight:700}
+.ph .who{display:flex;gap:14px;color:var(--mute)}
+.ph .who span{border-bottom:1px solid var(--mute);min-width:44px;display:inline-block;text-align:center}
+.pq{display:grid;gap:6px}
+.pq h2{font-size:19px;font-weight:700}
+.pq h2 .pt{font-size:13px;font-weight:600;border:1px solid var(--fg);border-radius:4px;padding:0 6px;margin-left:6px}
+.pq p{font-size:15px;white-space:pre-wrap}
+.qrow{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);border-top:1px dashed var(--paperline)}
+.qrow>*{min-width:0}
+.ql{padding:14px 18px 14px 0;border-right:1px dashed var(--paperline);display:grid;gap:10px;align-content:start}
+.qr{padding:14px 0 14px 18px;display:grid;gap:8px;align-content:start}
+.ql .qt{font-size:15.5px;line-height:1.8}
+.ql .qt b.n{margin-right:6px}
+.ql pre,.ql table{font-size:13px}
+.qr .lab{font-size:12.5px;color:var(--mute);font-family:var(--f-sans)}
+.qr textarea{min-height:150px;background:repeating-linear-gradient(transparent,transparent 26px,var(--rule) 26px,var(--rule) 27px);line-height:27px;padding:2px 12px;border-radius:8px;border-color:var(--paperline)}
+.qr .fin{width:100%;font-family:var(--f-sans)}
+.qr label.al{display:flex;gap:8px;align-items:center;font-family:var(--f-sans);font-size:14.5px}
+.bm{flex:none;display:inline-grid;place-items:center;min-width:1.4em;height:1.4em;border:1px solid var(--fg);border-radius:50%;font-size:12px;font-family:var(--f-sans);line-height:1;padding:0 1px;background:var(--bg)}
+.ordshow{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-family:var(--f-sans)}
+.ordshow .ob{border:1.5px solid var(--fg);background:var(--bg);border-radius:8px;padding:2px 12px;font-weight:700}
+.ordshow .ob.pk{background:var(--y1);border-color:var(--y1);color:#26241f}
+.pnext{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;border-top:3px double var(--fg);padding-top:14px;font-family:var(--f-sans)}
+.score{font-size:46px;font-weight:800;line-height:1}
+@media (max-width:760px){
+  .qrow{grid-template-columns:minmax(0,1fr)}.ql{border-right:0;padding-right:0;border-bottom:1px dotted var(--paperline)}.qr{padding-left:0}
+  .paper{padding:16px 16px 20px}.hero h1{font-size:22px}.hero{padding:16px}.homegrid{grid-template-columns:minmax(0,1fr)}.hbtn{min-height:0;padding:20px}
+}
+</style>
+<div class="wrap" id="root"></div>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const num=n=>'re:(^|[^0-9])'+n+'([^0-9]|$)';
+let store={pg:{},hist:[],wrong:{},hl:{},cp:{},cz:{}};
+try{const r=localStorage.getItem('dcdp3');if(r)Object.assign(store,JSON.parse(r))}catch(e){}
+const save=()=>{try{localStorage.setItem('dcdp3',JSON.stringify(store))}catch(e){}};
+try{const th=localStorage.getItem('dcdp-theme');if(th)document.documentElement.setAttribute('data-theme',th)}catch(e){}
+const TOPICS=[
+ {id:'merge',u:'dc',n:'병합 정렬',e:'🥞'},{id:'sum',u:'dc',n:'리스트 합·개수',e:'🧮'},{id:'max',u:'dc',n:'최댓값·최솟값',e:'🏆'},
+ {id:'sorted',u:'dc',n:'정렬 여부 확인',e:'🔍'},{id:'pow',u:'dc',n:'거듭제곱(2ⁿ)',e:'🚀'},{id:'bs',u:'dc',n:'이진 탐색',e:'🎯'},
+ {id:'fib',u:'dp',n:'피보나치',e:'🌀'},{id:'grid',u:'dp',n:'격자 경로 수',e:'🗺️'},{id:'calls',u:'dp',n:'호출 횟수',e:'📞'},
+ {id:'memo',u:'dp',n:'하향식(메모)',e:'📝'},{id:'bu',u:'dp',n:'상향식(표 채우기)',e:'🧱'},{id:'cmp',u:'dp',n:'DC vs DP 비교',e:'⚖️'}
+];
+
+/* ====== 수업 정리 (노트북 6·7 전체) ======
+ 마크업: [[핵심 용어]] = 진한 노랑, {{빈칸 후보}} = 연한 노랑, @@코드@@ = 인라인 코드
+ imp: 0 보통 / 1 ★ 중요 / 2 ★★ 시험 단골 */
+const S=(i,x)=>({k:'s',i,x});
+const T=(i,head,rows)=>({k:'t',i,head,rows});
+const C=(i,title,code,note)=>({k:'c',i,title,code,note});
+const K=x=>({k:'q',x});
+const SEC={dc:[],dp:[]};
+const SE=(u,id,title,items)=>SEC[u].push({id,title,items});
+
+/* ---------------- ② 분할 정복 ---------------- */
+SE('dc','d1','1. 분할 정복이란',[
+ K(`오늘의 질문 · 큰 문제를 작게 나누면 무엇이 달라질까?`),
+ S(1,`정렬 시간에 무작위 데이터 10,000개를 정렬할 때 비교 횟수는 선택 49,995,000 · 버블 49,984,847 · 삽입 24,829,051인데, {{병합}} 120,489 · {{퀵}} 164,372로 훨씬 적었다.`),
+ S(1,`병합과 퀵은 문제를 {{나눠서}} 풀었고, 이 방법의 이름이 [[분할 정복]]이다.`),
+ S(2,`[[분할 정복]]은 큰 문제를 {{작은 문제}}로 나누어 풀고, 작은 문제의 답을 {{모아서}} 원래 문제의 답을 만드는 방법이다.`),
+ S(2,`작은 문제의 조건 ① : 구하려는 [[답의 성질]]이 원래 문제와 {{같다}}.`),
+ S(2,`작은 문제의 조건 ② : 다루는 [[대상]]이 원래 문제 대상의 {{일부}}이다.`),
+ S(1,`①이 있어서 작은 문제를 풀 때도 {{같은 방법}}을 다시 쓸 수 있고, ②가 있어서 나눌수록 문제가 {{작아진다}}.`)]);
+SE('dc','d2','분할 정복의 세 단계',[
+ K(`예) 학교 전체에서 안경을 쓴 학생이 몇 명인지 세어 보자.`),
+ S(2,`[[분할]] : 문제를 {{같은 종류}}의 작은 문제로 나누고, 바로 풀 수 있을 만큼 작아질 때까지 {{되풀이}}해 나눈다. (학교 → 학년 → 반)`),
+ S(2,`나눌 때 지킬 것 ① : 나누는 {{기준}}이 분명해야 한다. 한 학생이 두 번 세어지거나 빠지면 틀린 답이 된다.`),
+ S(2,`나눌 때 지킬 것 ② : 나눈 문제로 {{해결 가능}}해야 한다. 나누었는데도 해결이 안 되면 더 나눈다.`),
+ S(2,`[[정복]] : 나눠진 작은 문제를 푼다. 범위가 커서 안 풀리면 같은 방법으로 다시 나누고, {{바로 답을 구할 수 있는 크기}}가 되면 직접 푼다. (한 반은 손을 들어 보게 하면 바로 센다)`),
+ S(2,`어떤 크기에서 멈출지 정하는 것이 [[종료 조건]]이다.`),
+ S(2,`[[결합]] : 작은 문제의 답을 모아 {{한 단계 위}} 문제의 답을 만들고, 이것을 되풀이해 원래 문제의 답까지 올라간다. (반별 수를 더해 학년, 학년을 더해 학교 전체)`),
+ S(1,`결합은 나눈 순서를 {{거꾸로}} 거슬러 올라가는 것이다.`),
+ T(2,['단계','하는 일','지켜야 할 것'],[
+  ['[[분할]]','같은 종류의 작은 문제로, 바로 풀릴 때까지 되풀이해 나눈다','나누는 {{기준}}이 분명하고, 나눈 문제도 {{풀 수 있어야}} 한다'],
+  ['[[정복]]','작은 문제를 푼다. 바로 풀리는 크기가 되면 직접 푼다','어느 크기에서 멈출지 정해야 한다 ({{종료 조건}})'],
+  ['[[결합]]','작은 답을 모아 위 단계의 답을 만들고, 원래 문제까지 올라간다','작은 답만으로 위 단계의 답을 만들 수 있어야 한다']]),
+ S(1,`이름 '분할 정복'에는 세 단계 가운데 {{앞의 두 단계}}(분할, 정복)가 들어 있다.`)]);
+SE('dc','d3','참고 · 분할 정복 이야기',[
+ T(0,['우리말','한자어','영어'],[['나눈다','[[분할]](分割)','Divide'],['정복한다','[[정복]](征服)','Conquer'],['합친다','[[결합]](結合)','Combine']]),
+ T(0,['영어','라틴어 뿌리','본래 뜻'],[['divide','dividere','떼어 {{나누다}}'],['conquer','conquirere','애써 찾아 얻다 (영어에서 처음에는 {{일을 해내다}}라는 뜻)']]),
+ S(0,`원래는 정치의 격언이었다. 라틴어 [[divide et impera]](나누어 다스려라), 영어로 divide and rule. 적을 여럿으로 갈라 놓으면 하나씩 이기기 쉽다는 뜻이다. 영어 기록은 1600년 무렵부터 보이고 누가 처음 한 말인지는 분명하지 않다.`),
+ T(1,['알고리즘 교과서의 정의',''],[['[[Divide]]','문제를 {{같은 문제의 더 작은 사례}} 여러 개로 나눈다'],['[[Conquer]]','작은 문제를 {{재귀}}로 푼다. 충분히 작으면 그냥 직접 푼다'],['[[Combine]]','작은 문제의 답을 합쳐 원래 문제의 답을 만든다']]),
+ S(1,`'같은 문제의 더 작은 사례'는 영어로 smaller instances of the same problem. [[instance(사례)]]는 문제에 실제 값을 넣은 한 경우를 말한다.`),
+ S(1,`'학교 전체에서 안경 쓴 학생 세기'와 '1학년에서 안경 쓴 학생 세기'는 같은 문제의 서로 다른 {{사례}}이다.`),
+ S(2,`작은 문제의 두 조건이 이 말에 다 들어 있다. same problem이 조건 {{①}}, smaller가 조건 {{②}}이다.`)]);
+SE('dc','d4','예시 · 병합 정렬과 퀵 정렬',[
+ T(2,['','분할','정복','결합'],[
+  ['[[병합 정렬]]','자리로 {{반씩}} 나눈다','원소가 {{하나 이하}}면 이미 정렬된 것이다','양쪽 {{맨 앞끼리 비교}}하며 하나로 합친다'],
+  ['[[퀵 정렬]]','{{기준값}}보다 작은 것 · 같은 것 · 큰 것으로 나눈다','원소가 {{하나 이하}}면 이미 정렬된 것이다','그냥 {{이어 붙인다}}']]),
+ S(2,`병합은 {{합칠 때}} 일하고, 퀵은 {{나눌 때}} 일한다.`),
+ S(1,`분할 정복은 정렬만을 위한 방법이 아니다. 정렬도 탐색도 아닌 문제에도 쓴다.`)]);
+SE('dc','d5','2. (실습) 안경 쓴 학생 세기 — count_glasses',[
+ C(1,'데이터 — 학교는 학년으로, 학년은 반으로 나뉜다',`school = [
+    [11, 12, 13, 14, 15],    # 1학년 1~5반
+    [12, 13, 11, 14, 12],    # 2학년 1~5반
+    [10, 12, 11, 13, 12],    # 3학년 1~5반
+]`),
+ S(1,`학교와 학년은 {{리스트}}이고, 반 하나는 그 반에서 안경 쓴 학생 수를 나타내는 {{정수 하나}}이다.`),
+ C(2,'의사 코드',`ALGORITHM CountGlasses(group)              ▷ group 에서 안경 쓴 학생 수
+    IF group 이 한 반이면 THEN
+        RETURN group                       ▷ 정복: 그 반에서 센 수를 그대로 쓴다
+    total ← 0
+    FOR group 을 이루는 각 부분 part DO       ▷ 분할: 학교 → 학년, 학년 → 반
+        total ← total + CountGlasses(part)  ▷ 결합: 부분의 답을 더한다
+    RETURN total`),
+ T(2,['그림에서','의사 코드에서'],[
+  ['학교 → 학년 → 반으로 내려간다 ([[분할]])','@@FOR group 을 이루는 각 부분 part@@'],
+  ['반에서 직접 센다 ([[정복]])','@@IF group 이 한 반이면 THEN RETURN group@@'],
+  ['위로 더해 올라간다 ([[결합]])','@@total ← total + CountGlasses(part)@@']]),
+ S(2,`'한 반인지'는 @@type(group) == int@@ 로 확인한다. 정수 하나이면 한 반이다.`),
+ C(2,'count_glasses 완성 코드',`def count_glasses(group):
+    if type(group) == int:
+        return group
+    total = 0
+    for part in group:
+        total = total + count_glasses(part)
+    return total
+
+print(count_glasses(school))       # 185
+print(count_glasses(school[0]))    # 65
+print(count_glasses(school[0][0])) # 11`,'1학년 합 65, 2학년 62, 3학년 58 → 전체 185'),
+ S(2,`이 코드는 반으로 둘씩 나누지 않고 학교를 {{학년 수만큼}}, 학년을 {{반 수만큼}} 나눈다.`),
+ S(2,`나누는 일은 데이터를 {{담을 때 이미}} 되어 있다. @@for part in group@@ 은 나뉜 부분을 하나씩 꺼내고, @@count_glasses(part)@@ 는 꺼낸 부분을 같은 함수로 다시 푼다. 이것이 분할 단계이다.`),
+ S(1,`나누는 방법은 문제와 데이터에 따라 다르다. (3절에서는 코드가 직접 가운데를 계산해 나눈다)`),
+ S(2,`나눈 학년들은 {{서로 다른}} 문제이다. 1학년을 세었다고 2학년 답을 알 수는 없으니 모두 풀어서 {{더해야}} 한다.`),
+ S(1,`(쓰기) 학년별로 나누면 남는 문제는 '각 학년에서 안경 쓴 학생 수를 구하는 문제'이다. 원래 문제와 같은 종류인 근거는 그룹 안에서 안경 쓴 학생 수 세기이고 {{범위만 작아졌기}} 때문이다.`)]);
+SE('dc','d6','3. (실습) 키 순서대로 줄을 섰는지 확인 — is_sorted',[
+ C(2,'의사 코드',`ALGORITHM IsSorted(A, lo, hi)          ▷ A[lo] 부터 A[hi] 까지 작은 것부터 서 있으면 참
+    IF lo = hi THEN
+        RETURN 참                      ▷ 정복: 한 명뿐이면 늘 순서대로다
+    mid ← (lo + hi) 를 2로 나눈 몫
+    left  ← IsSorted(A, lo, mid)       ▷ 분할: 앞쪽 반
+    right ← IsSorted(A, mid + 1, hi)   ▷ 분할: 뒤쪽 반
+    RETURN left AND right AND A[mid] ≤ A[mid + 1]   ▷ 결합`),
+ S(2,`[[결합 줄]]이 이 문제의 핵심이다. 앞쪽도 순서대로, 뒤쪽도 순서대로라고 해서 전체가 순서대로인 것은 아니다. 예) @@[150, 163]@@ 과 @@[152, 160]@@ 을 붙이면 {{163 > 152}}라 순서가 깨진다.`),
+ S(2,`결합에서는 두 답(left, right)에 더해 앞쪽의 {{마지막}} 사람과 뒤쪽의 {{첫}} 사람, 즉 {{경계}} @@A[mid] <= A[mid + 1]@@ 을 한 번 더 비교한다.`),
+ C(2,'is_sorted 완성 코드',`def is_sorted(A, lo, hi):
+    if lo == hi:
+        return True
+    mid = (lo + hi) // 2
+    left = is_sorted(A, lo, mid)
+    right = is_sorted(A, mid + 1, hi)
+    return left and right and A[mid] <= A[mid + 1]
+
+A = [150, 152, 155, 160, 163]
+print(is_sorted(A, 0, len(A) - 1))     # True
+B = [150, 163, 152, 160]
+print(is_sorted(B, 0, len(B) - 1))     # False`),
+ T(2,['','안경 쓴 학생 세기 (2절)','키 순서 확인 (3절)'],[
+  ['[[분할]]','학교 → 학년 → 반. 기준에 따라 {{여럿}}으로','줄의 가운데에서 {{둘}}로'],
+  ['[[정복]]','한 반이면 센 수를 그대로','한 명이면 늘 순서대로({{참}})'],
+  ['[[결합]]','부분의 답을 {{더하기만}} 하면 된다','두 답에 더해 {{경계}} @@A[mid] ≤ A[mid + 1]@@ 까지 봐야 한다']]),
+ S(2,`어떻게 나눌까? 같은 종류의 작은 문제로 나누되, {{작은 문제의 답으로 원래 문제의 답을 만들 수 있는지}}까지 생각해야 한다.`)]);
+SE('dc','d7','4. 같은 문제, 여러 가지 분할 — 2ⁿ 구하기',[
+ S(2,`같은 문제라도 나누는 방법은 {{하나가 아니다}}. 2ⁿ을 구하는 문제를 세 가지로 나누어 본다.`),
+ T(2,['','분할','정복','결합'],[
+  ['[[① 지수를 1씩 줄이기]]','2ⁿ = 2ⁿ⁻¹ × 2 로 나누어 2ⁿ⁻¹ 을 구한다','2⁰ = {{1}}','2 를 한 번 {{곱한다}}'],
+  ['[[② 반으로 나누어 둘 다 풀기]]','2ⁿ = 2^⌊n/2⌋ × 2^(n−⌊n/2⌋) 로 나누어 두 쪽을 {{각각}} 구한다','2⁰ = 1, 2¹ = {{2}}','두 답을 {{곱한다}}'],
+  ['[[③ 반으로 나누어 하나만 풀기]]','2ⁿ = (2^⌊n/2⌋)² 로 나누어 {{하나만}} 구한다 (n 이 홀수이면 × 2 추가)','2⁰ = 1','{{제곱}}한다. n 이 홀수이면 2 를 한 번 더 곱한다']]),
+ S(1,`⌊n/2⌋ 는 'n 을 2로 나눈 몫'이다. 파이썬의 @@n // 2@@ 이다.`),
+ T(1,['','2¹⁰ 을 나누면'],[['①','2¹⁰ = 2⁹ × 2'],['②','2¹⁰ = 2⁵ × 2⁵ 에서 2⁵ 를 [[두 번]] 구한다'],['③','2¹⁰ = (2⁵)² 에서 2⁵ 를 [[한 번]] 구해 제곱한다']]),
+ S(1,`세 방법 모두 같은 종류의 작은 문제(더 작은 거듭제곱)로 나누어 풀고 결합하므로 {{분할 정복}}이다.`),
+ C(2,'세 방법의 코드 — 2ⁿ 과 곱셈 횟수를 함께 반환',`def power_one(n):
+    """① 지수를 1씩 줄입니다."""
+    if n == 0:
+        return 1, 0
+    value, c = power_one(n - 1)
+    return 2 * value, c + 1
+
+
+def power_both(n):
+    """② 반으로 나누어 두 쪽을 모두 구합니다."""
+    if n == 0:
+        return 1, 0
+    if n == 1:
+        return 2, 0
+    a, c1 = power_both(n // 2)
+    b, c2 = power_both(n - n // 2)
+    return a * b, c1 + c2 + 1
+
+
+def power_half(n):
+    """③ 반으로 나누어 한 쪽만 구한 뒤 제곱합니다."""
+    if n == 0:
+        return 1, 0
+    half, c = power_half(n // 2)
+    result = half * half
+    c += 1
+    if n % 2 == 1:
+        result = result * 2
+        c += 1
+    return result, c`),
+ S(1,`세 함수는 2ⁿ 과 {{곱셈을 몇 번}} 했는지도 반환한다. 그래서 종료 조건에서 @@return 1, 0@@ 처럼 값을 {{두 개}} 반환한다.`),
+ T(2,['2ⁿ','① 1씩 줄이기','② 둘 다 풀기','③ 하나만 풀기'],[['n = 10','{{10}}번','{{9}}번','[[6번]]'],['n = 100','{{100}}번','{{99}}번','[[10번]]'],['n = 500','{{500}}번','{{499}}번','[[15번]]']]),
+ S(2,`세 방법 모두 분할 정복이지만 {{효율이 다르다}}.`),
+ S(2,`②는 안경 세기처럼 나눈 두 부분을 {{모두}} 푼다. 반으로 나누었는데도 ①과 거의 같다 → {{나누기만 해서는 빨라지지 않는다}}.`),
+ S(2,`③은 두 반쪽이 {{똑같다}}(2⁵ 와 2⁵)는 것을 이용해 하나만 풀어 그 답을 제곱한다. 그래서 n 이 50배가 되어도 곱셈은 몇 번밖에 늘지 않는다. (곱셈 500번 → 15번)`)]);
+SE('dc','d8','5. 종료 조건',[
+ S(1,`@@count_glasses@@ 와 @@is_sorted@@ 는 함수 안에서 자기 자신을 다시 호출한다. 이것이 [[재귀]]이다.`),
+ S(2,`1절에서 '정복' 단계는 어느 크기에서 멈출지 정해야 한다고 했다. 더 이상 나누지 않고 바로 답을 반환할 수 있는 크기, 한 마디로 [[종료 조건]]이다.`),
+ T(2,['함수','종료 조건','바로 반환하는 답'],[['@@count_glasses@@','@@type(group) == int@@ (한 반)','그 반에서 센 수'],['@@is_sorted@@','@@lo == hi@@ (한 명)','@@True@@']]),
+ S(2,`세 단계 가운데 {{'정복'}}이 바로 종료 조건의 자리이다. 병합 정렬과 퀵 정렬의 종료 조건은 '원소가 {{하나 이하}}'였다.`),
+ S(2,`종료 조건은 두 가지를 갖추어야 한다. ① 더 나누지 않고 답을 {{바로 반환}}한다. ② 계속 나누면 {{언젠가는 반드시}} 종료 조건에 이른다.`)]);
+SE('dc','d9','6. (실습) 종료 조건을 빼고 실행해 보기',[
+ S(2,`@@is_sorted_test@@ 에서 @@if lo == hi:@@ 와 @@return True@@ 두 줄을 지우고 실행하면 {{RecursionError}}가 난다. 종료 조건이 없어 함수가 끝없이 자기 자신을 부르기 때문이다.`),
+ S(2,`종료 조건이 없으면 끝없이 부르거나({{RecursionError}}) 다른 오류가 난다. (보충: count_glasses에서 종료 조건을 지우면 정수를 @@for@@ 로 돌려 {{TypeError}})`)]);
+SE('dc','d10','7. 이진 탐색을 분할 정복으로 다시 보기',[
+ S(1,`탐색 시간에는 @@while@@ 반복문으로 짠 이진 탐색을 재귀로도 쓸 수 있다.`),
+ T(2,['단계','이진 탐색'],[
+  ['[[분할]]','가운데 값과 비교해, 남은 후보를 {{왼쪽 반이나 오른쪽 반}}으로 줄인다'],
+  ['[[정복]]','가운데 값이 찾는 값이면 {{mid}} 를 반환 · 남은 후보가 없으면(@@lo > hi@@) {{-1}} 을 반환'],
+  ['[[결합]]','{{할 일이 없다}}. 남은 반쪽에서 찾은 답을 그대로 전체의 답으로 반환한다']]),
+ S(2,`이진 탐색은 나눈 두 반쪽 가운데 {{한쪽만}} 푼다. 가운데 값과 비교하면 답이 어느 쪽에 있는지 알 수 있고, 그 답이 그대로 전체의 답이 되어 결합할 일이 없다.`),
+ S(2,`종료 조건은 {{둘}}이다. 찾았을 때와 남은 후보가 없을 때(@@lo > hi@@)이다.`),
+ S(2,`병합은 {{합칠 때}} 일하고, 퀵은 {{나눌 때}} 일하고, 이진 탐색은 합칠 때 {{할 일이 없다}}.`),
+ C(2,'재귀로 짠 이진 탐색',`def binary_search_rec(A, target, lo, hi):
+    if lo > hi:                                            # 남은 후보가 없습니다.
+        return -1
+    mid = (lo + hi) // 2
+    if A[mid] == target:                                   # 찾았습니다.
+        return mid
+    elif A[mid] < target:
+        return binary_search_rec(A, target, mid + 1, hi)   # 오른쪽 반에 맡깁니다.
+    else:
+        return binary_search_rec(A, target, lo, mid - 1)   # 왼쪽 반에 맡깁니다.
+
+A = [11, 14, 23, 27, 31, 42, 55, 68, 74, 89]
+print(binary_search_rec(A, 27, 0, len(A) - 1))     # 3
+print(binary_search_rec(A, 89, 0, len(A) - 1))     # 9
+print(binary_search_rec(A, 100, 0, len(A) - 1))    # -1`)]);
+SE('dc','d11','오늘 정리 + 스스로 해 보기',[
+ T(2,['오늘 배운 것',''],[
+  ['분할 정복','같은 종류의 작은 문제로 나누어 풀고, 그 답으로 원래 문제를 푼다'],
+  ['세 단계','[[분할 · 정복 · 결합]]'],
+  ['같은 종류','구하는 것은 같고 크기만 작다. 그래서 {{같은 함수로 다시}} 풀 수 있다'],
+  ['결합','답을 {{더하기만}} 하면 되는 문제(안경 세기)도 있고, {{경계}}까지 봐야 하는 문제(키 순서 확인)도 있다'],
+  ['나누는 방법','같은 문제도 여러 방법으로 나눌 수 있고 방법에 따라 효율이 다르다. 나눈 두 문제가 똑같으면 하나만 풀어도 된다 (2ⁿ 에서 곱셈 500번 → {{15번}})'],
+  ['종료 조건','더 나누지 않고 {{바로 답을 반환}}하는 자리. 없으면 끝없이 부르거나 다른 오류가 난다'],
+  ['일하는 자리','병합은 합칠 때, 퀵은 나눌 때 일하고, 이진 탐색은 결합할 일이 없다']]),
+ K(`다음 시간 · 동적 계획 알고리즘 설계`),
+ C(1,'스스로 해 보기 1 · 줄 선 순서를 거꾸로 뒤집기 (A[::-1], reversed 금지)',`ALGORITHM Reverse(A, lo, hi)
+    IF lo = hi THEN
+        RETURN [A[lo]]                 ▷ 정복: 한 명이면 그대로
+    mid ← (lo + hi) 를 2로 나눈 몫
+    left  ← Reverse(A, lo, mid)        ▷ 분할: 앞쪽 반을 뒤집는다
+    right ← Reverse(A, mid + 1, hi)    ▷ 분할: 뒤쪽 반을 뒤집는다
+    RETURN right + left                ▷ 결합: 뒤쪽을 뒤집은 것을 앞에 붙인다`,'[1,2,3] → [3,2,1], [4,5] → [5,4] 이므로 [5,4] + [3,2,1] = [5,4,3,2,1]'),
+ S(2,`뒤집기의 결합은 {{right + left}} 이다. 앞쪽을 뒤집은 것과 뒤쪽을 뒤집은 것을 {{순서를 바꿔}} 붙인다.`),
+ C(1,'스스로 해 보기 2 · 안경 쓴 학생이 가장 길게 이어 앉은 수 (1 = 안경)',`# [1, 0, 1, 1, 1, 1, 0, 0, 1, 1]  →  4
+def longest_run(A, lo, hi):
+    if lo == hi:
+        return A[lo]                       # 1이면 길이 1, 0이면 0
+    mid = (lo + hi) // 2
+    left = longest_run(A, lo, mid)         # 왼쪽 반 안
+    right = longest_run(A, mid + 1, hi)    # 오른쪽 반 안
+    l = 0; i = mid                         # 가운데를 걸친 길이
+    while i >= lo and A[i] == 1:
+        l += 1; i -= 1
+    r = 0; j = mid + 1
+    while j <= hi and A[j] == 1:
+        r += 1; j += 1
+    return max(left, right, l + r)`,'교재는 힌트만 주었고, 위 코드는 힌트를 따라 정리한 예시 답이다.'),
+ S(2,`가장 긴 줄은 {{왼쪽 반 안}}에 있거나, {{오른쪽 반 안}}에 있거나, {{가운데를 걸쳐}} 있다. 가운데를 걸친 부분은 어느 반쪽의 답에도 들어 있지 않으므로 결합에서 따로 구한다.`)]);
+
+/* ---------------- ③ 동적 계획법 ---------------- */
+SE('dp','p1','1. 동적 계획법이란',[
+ K(`오늘의 질문 · 작은 문제가 이미 푼 문제라면?`),
+ S(1,`안경 세기에서 학년마다 풀 문제는 모두 '안경 쓴 학생 수 세기'라는 {{같은 종류}}였지만 다루는 학생이 {{달랐다}}. 1학년 수를 알아도 2학년 수는 따로 세어야 했다.`),
+ S(2,`어떤 문제에서는 {{똑같은}} 작은 문제를 여러 번 풀게 된다. 피보나치 수 @@f(1) = f(2) = 1@@, @@f(n) = f(n-2) + f(n-1)@@ 의 호출 나무가 그 예이다.`),
+ S(2,`@@f(5)@@ 하나를 구하는 데 @@f(3)@@ 을 {{2번}}, @@f(2)@@ 를 {{3번}}, @@f(1)@@ 을 {{2번}} 구했다. 이미 구한 답을 또 구한 것이다.`),
+ S(2,`[[동적 계획법]]은 작은 문제의 답을 {{표에 적어 두고}}, 그 답을 이용해 더 큰 문제의 답을 구하는 방법이다. 같은 작은 문제의 답이 여러 곳에서 필요해도 다시 계산하지 않고 적어 둔 답을 쓴다.`),
+ S(1,`동적 프로그래밍, 다이내믹 프로그래밍, 줄여서 {{DP}}라고도 부른다. 답을 적어 두는 표를 [[동적 표]](DP 테이블)라고 부른다.`),
+ S(2,`이용하는 성질 ① : 작은 문제의 답으로 {{큰 문제의 답}}을 만들 수 있다. (분할 정복에서도 쓴 성질)`),
+ S(2,`이용하는 성질 ② : {{똑같은}} 작은 문제의 답이 {{여러 곳}}에서 필요하다.`),
+ S(2,`②가 있으면 적어 둔 답을 여러 번 다시 쓸 수 있어 계산이 크게 줄어든다. ②가 없으면 적어 둔 답을 꺼낼 일이 없어, 적어 두어도 계산이 {{줄지 않는다}}.`),
+ T(2,['','뜻','예'],[
+  ['[[같은 종류]]의 작은 문제 (지난 시간)','구하는 것이 같다. 다루는 대상은 {{다르다}}','1학년 세기와 2학년 세기'],
+  ['[[똑같은]] 작은 문제 (오늘)','구하는 것도 같고 다루는 대상까지 {{같다}}','피보나치에서 반복해서 계산하는 @@f(2)@@']])]);
+SE('dp','p2','동적 계획법을 설계하는 네 단계',[
+ S(2,`문제가 바뀌어도 단계는 그대로이다. ★ 네 단계를 순서대로 외우자.`),
+ T(2,['단계','할 일'],[
+  ['[[① 작은 문제 정하기]]','표의 한 칸에 {{무엇을}} 적을지 정한다'],
+  ['[[② 점화식 세우기]]','큰 문제의 답을 {{작은 문제의 답}}으로 나타낸다'],
+  ['[[③ 기저 사례 정하기]]','더 작은 문제를 풀지 않고도 {{답을 바로 알 수 있는 경우와 그 답}}을 정한다'],
+  ['[[④ 계산 순서 정하기]]','필요한 작은 문제의 답이 {{먼저}} 구해지도록 계산 방법과 순서를 정한다']]),
+ S(2,`④ 계산 순서 : [[하향식]]에서는 {{재귀}}로 필요한 답을 구하고, [[상향식]]에서는 표를 {{채울 순서}}를 정한다.`),
+ S(2,`더 작은 문제를 풀지 않고도 답을 바로 알 수 있는 경우를 [[기저 사례]](base case)라고 한다. 지난 시간에는 이런 경우에 재귀 호출을 하지 않도록 {{종료 조건}}을 두었다.`),
+ S(1,`하향식에서는 기저 사례의 답을 바로 {{반환}}하고, 상향식에서는 그 답을 바탕으로 {{다른 칸을 채운다}}.`)]);
+SE('dp','p3','참고 · 동적 계획법이라는 이름의 유래',[
+ S(0,`1950년대 미국 RAND 연구소의 수학자 [[리처드 벨만]](Richard Bellman)이 정리하고 이름을 붙였다.`),
+ T(0,['영어','그때의 뜻'],[
+  ['[[programming]]','코드를 짠다는 뜻이 아니라 {{계획표 · 일정표}}를 짠다는 뜻. 같은 시기의 linear programming(선형 계획법)도 같은 뜻이다'],
+  ['[[dynamic]]','결정이 {{여러 단계에 걸쳐 이어지고}}, 앞의 결정에 따라 다음 상황이 달라지는 문제를 다룬다는 뜻으로 붙였다고 벨만이 회고했다']]),
+ S(0,`programming은 코딩보다 '계획을 세운다'는 뜻에 가깝다. 우리말 '동적 계획법'의 '계획'도 이 뜻이다.`)]);
+SE('dp','p4','2. 격자에서 갈 수 있는 길의 수',[
+ S(2,`3×3 격자에서 왼쪽 위 칸 @@(0, 0)@@ 에서 출발해 오른쪽 아래 칸 @@(2, 2)@@ 까지 간다. 한 번에 한 칸씩 {{오른쪽이나 아래쪽으로만}} 갈 수 있다.`),
+ S(1,`칸의 위치는 @@(r, c)@@ 로 나타낸다. r 은 {{행}} 번호, c 는 {{열}} 번호이고, 행은 위에서 아래로, 열은 왼쪽에서 오른쪽으로, 둘 다 {{0부터}} 시작한다.`),
+ S(2,`[[단계 ① 작은 문제 정하기]] : @@P(r, c)@@ = 출발 칸 (0, 0) 에서 칸 (r, c) 까지 {{오는 길의 수}}. 구하려는 답은 @@P(2, 2)@@ 이다.`),
+ S(1,`출발 칸에서 이동해야 하는 횟수가 {{적을수록}} 더 작은 문제이다.`),
+ T(2,['','c = 0','c = 1','c = 2'],[['r = 0','1','1','1'],['r = 1','1','2','3'],['r = 2','1','3','[[6]]']]),
+ S(2,`(쓰기) 칸 (r, c) 에 오기 바로 전에는 {{위쪽 칸}} (r-1, c) 이나 {{왼쪽 칸}} (r, c-1) 에 있었다.`),
+ S(2,`[[점화식]] : @@P(r, c) = P(r-1, c) + P(r, c-1)@@ — 위 칸을 거쳐 오는 길과 왼쪽 칸을 거쳐 오는 길로 나누어 더한다.`),
+ S(2,`[[기저 사례]] : 출발 칸 (0, 0) 은 이동 없이 도착한 것이므로 길이 {{1가지}}, 즉 @@P(0, 0) = 1@@.`),
+ S(2,`맨 윗줄(r = 0)은 위쪽 칸이 없어 {{왼쪽에서만}}, 맨 왼쪽 줄(c = 0)은 왼쪽 칸이 없어 {{위에서만}} 올 수 있다. 두 경우 모두 길이 한 가지이므로 첫 행과 첫 열은 모두 {{1}}이다.`)]);
+SE('dp','p5','3. 길이 몇 가지인지 세어 보기 — count_paths',[
+ C(2,'의사 코드',`ALGORITHM CountPaths(r, c)            ▷ (0, 0) 에서 (r, c) 까지 오는 길의 수
+    IF r = 0 AND c = 0 THEN
+        RETURN 1                      ▷ 기저 사례: 출발 칸
+    total ← 0
+    IF r > 0 THEN
+        total ← total + CountPaths(r − 1, c)   ▷ 위 칸에서 내려온 길
+    IF c > 0 THEN
+        total ← total + CountPaths(r, c − 1)   ▷ 왼쪽 칸에서 온 길
+    RETURN total`),
+ S(2,`@@IF r > 0@@ 과 @@IF c > 0@@ 은 {{격자 밖의 좌표}}로 함수를 호출하지 않도록 확인하는 조건이다.`),
+ C(2,'count_paths',`N = 3   # 3×3 격자
+
+def count_paths(r, c):
+    if r == 0 and c == 0:
+        return 1                                # 기저 사례: 출발 칸
+    total = 0
+    if r > 0:
+        total = total + count_paths(r - 1, c)   # 위 칸에서 내려온 길
+    if c > 0:
+        total = total + count_paths(r, c - 1)   # 왼쪽 칸에서 온 길
+    return total
+
+print(count_paths(1, 1))           # 2
+print(count_paths(N - 1, N - 1))   # 6`)]);
+SE('dp','p6','4. 같은 칸까지 오는 길을 몇 번 계산하는지',[
+ S(2,`6×6 격자(도착 칸 (5, 5))에서 @@count_paths@@ 는 답을 맞게 구하지만, 같은 칸의 길의 수를 {{여러 번}} 계산한다.`),
+ C(1,'칸마다 호출 횟수 세기 (called 표)',`N = 6
+called = [[0] * N for _ in range(N)]   # called[r][c]: 칸 (r, c) 의 호출 횟수
+
+def count_paths_counted(r, c):
+    called[r][c] = called[r][c] + 1    # 호출될 때마다 1 늘립니다.
+    if r == 0 and c == 0:
+        return 1
+    total = 0
+    if r > 0:
+        total = total + count_paths_counted(r - 1, c)
+    if c > 0:
+        total = total + count_paths_counted(r, c - 1)
+    return total`,'길의 수: 252 · 전체 호출 횟수: 923'),
+ T(2,['6×6 호출 횟수 표 (행 → 열)','','','','','',''],[['252','126','56','21','6','1',''],['126','70','35','15','5','1',''],['56','35','20','10','4','1',''],['21','15','10','6','3','1',''],['6','5','4','3','2','1',''],['1','1','1','1','1','1','']]),
+ T(2,['칸','호출 횟수'],[['출발 칸 (0, 0)','[[252번]]'],['그 옆 (0, 1) 과 (1, 0)','126번씩'],['(1, 1)','70번'],['모두','[[923번]]']]),
+ S(2,`출발 칸 @@count_paths_counted(0, 0)@@ 이 {{252번}} 호출되었다. 이것은 출발 칸에서 도착 칸까지 가는 {{길의 수}}와 같다. 재귀 호출을 따라가면 도착 칸에서 출발 칸까지 거꾸로 길 하나를 그리게 된다.`),
+ S(2,`그러니 적어 두지 않고 세는 것은 길을 {{하나하나 모두 그려 보는 것}}과 같다. 길이 많아지면 호출도 그만큼 많아진다.`),
+ S(2,`@@P(1, 1)@@ 의 값은 2인데 같은 값을 구하는 계산을 총 {{70번}} 했다. 피보나치에서 @@f(2)@@ 를 여러 번 구한 것과 같고, 성질 ② {{똑같은 작은 문제의 답이 여러 곳에서 필요하다}}에 해당한다.`)]);
+SE('dp','p7','5. (실습) 구한 답을 동적 표에 적어 두기 — 하향식',[
+ S(2,`[[하향식]]은 도착 칸의 답을 구하는 데 필요한 작은 문제를 재귀로 풀되, 두 가지를 추가한다. 추가 ① {{계산하기 전에}} 동적 표를 확인해 저장되어 있으면 그 값을 바로 반환한다. 추가 ② {{계산한 뒤에}} 답을 동적 표에 저장한다. (기저 사례의 답도 저장한다)`),
+ C(2,'의사 코드',`dt ← 칸마다 '아직 없음'으로 채운 N × N 표          ▷ 동적 표
+
+ALGORITHM CountPathsMemo(r, c)
+    IF dt[r][c] 가 '아직 없음'이 아니면 THEN
+        RETURN dt[r][c]                           ▷ 추가 ①: 이미 구한 답을 꺼내 쓴다
+    IF r = 0 AND c = 0 THEN
+        dt[r][c] ← 1                              ▷ 기저 사례의 답도 적어 둔다
+        RETURN dt[r][c]
+    total ← 0
+    IF r > 0 THEN total ← total + CountPathsMemo(r - 1, c)
+    IF c > 0 THEN total ← total + CountPathsMemo(r, c - 1)
+    dt[r][c] ← total                              ▷ 추가 ②: 구한 답을 적어 둔다
+    RETURN total`),
+ S(2,`'아직 없음'은 {{답으로 나올 수 없는 값}}이어야 한다. 파이썬에서는 {{None}}으로 적는다.`),
+ C(2,'count_paths_memo',`N = 6
+dt = [[None] * N for _ in range(N)]   # 동적 표. None 은 '아직 없음'입니다.
+calls = 0                             # 함수의 호출 횟수
+
+def count_paths_memo(r, c):
+    global calls
+    calls = calls + 1
+    if dt[r][c] is not None:          # 추가 ①
+        return dt[r][c]
+    if r == 0 and c == 0:
+        dt[r][c] = 1                  # 기저 사례의 답도 표에 적어 둡니다.
+        return dt[r][c]
+    total = 0
+    if r > 0:
+        total = total + count_paths_memo(r - 1, c)
+    if c > 0:
+        total = total + count_paths_memo(r, c - 1)
+    dt[r][c] = total                  # 추가 ②
+    return total
+
+print("길의 수:", count_paths_memo(N - 1, N - 1))   # 252
+print("호출 횟수:", calls)                          # 61`),
+ T(2,['6×6 격자','길의 수','호출 횟수'],[['적어 두지 않을 때 (4절)','252','923'],['동적 표에 적어 둘 때 (5절)','252','[[61]]']]),
+ S(2,`각 좌표로 함수가 {{많아야 두 번}} 호출된다. 오른쪽 칸과 아래 칸의 답을 구할 때 각각 한 번씩 필요하기 때문이다. 두 번째 호출 때는 표에서 꺼내기만 하므로 각 칸의 답은 {{한 번만}} 구한다.`),
+ S(2,`@@61 = 1 (도착 칸) + 10 × 1 (맨 아랫줄과 맨 오른쪽 줄) + 25 × 2 (나머지 칸)@@. 이제 호출 수는 길의 수가 아니라 {{칸의 수}}를 따라 늘어난다.`),
+ S(2,`[[막기]]와 [[적어 두기]]는 다르다. 미로 탐색에서는 한 번 간 칸을 @@seen@@ 에 넣고 다시 가지 않도록 막았다. 여기에 그 방법을 쓰면 처음 지나간 길 하나만 세고 나머지 길은 모두 막혀 답이 {{1}}이 된다.`),
+ S(2,`동적 표는 다시 방문하는 것을 막는 대신 {{이미 구한 답을 꺼내 쓴다}}. 그래서 길은 모두 세면서 계산만 줄어든다.`)]);
+SE('dp','p8','6. (실습) 작은 문제부터 풀어 동적 표 채우기 — 상향식',[
+ S(2,`[[상향식]]은 재귀 호출 대신 {{반복문}}으로, 작은 문제의 답부터 표를 채운다. 표를 어떤 순서로 채울지는 {{우리가 정한다}}. 위 줄부터, 한 줄 안에서는 왼쪽부터 채운다.`),
+ C(2,'의사 코드',`ALGORITHM CountPathsTable(N)
+    dt ← N × N 표
+    FOR r ← 0 TO N − 1 DO              ▷ 위 줄부터
+        FOR c ← 0 TO N − 1 DO          ▷ 왼쪽부터
+            IF r = 0 AND c = 0 THEN
+                dt[r][c] ← 1           ▷ 기저 사례: 표의 첫 값
+            ELSE
+                dt[r][c] ← 0
+                IF r > 0 THEN dt[r][c] ← dt[r][c] + dt[r − 1][c]   ▷ 위 칸
+                IF c > 0 THEN dt[r][c] ← dt[r][c] + dt[r][c − 1]   ▷ 왼쪽 칸
+    RETURN dt[N − 1][N − 1]`),
+ S(2,`점화식과 기저 사례는 3절과 {{똑같다}}. 바뀐 것은 {{계산 순서}}이다. 상향식에서는 기저 사례의 답을 먼저 적고, 그 값을 이용해 다른 칸을 채운다.`),
+ C(2,'상향식 코드',`N = 6
+dt = [[0] * N for _ in range(N)]   # N×N 동적 표
+
+for r in range(N):                 # 위 줄부터
+    for c in range(N):             # 왼쪽부터
+        if r == 0 and c == 0:
+            dt[r][c] = 1           # 기저 사례
+        else:
+            dt[r][c] = 0
+            if r > 0:
+                dt[r][c] = dt[r][c] + dt[r-1][c]   # 위 칸
+            if c > 0:
+                dt[r][c] = dt[r][c] + dt[r][c-1]   # 왼쪽 칸
+
+print("길의 수:", dt[N - 1][N - 1])   # 252`,'표: 1 1 1 1 1 1 / 1 2 3 4 5 6 / 1 3 6 10 15 21 / 1 4 10 20 35 56 / 1 5 15 35 70 126 / 1 6 21 56 126 252'),
+ S(2,`(실습) 바깥 반복문을 @@range(N - 1, -1, -1)@@ (아래 줄부터)로 바꾸면 위 칸 @@dt[r-1][c]@@ 이 아직 계산되지 않아 처음 넣은 {{0}} 그대로이다. 그래서 {{맨 윗줄만 1}}이고 나머지는 0, 길의 수는 {{0}}이 된다.`),
+ T(2,['','하향식 (5절)','상향식 (6절)'],[
+  ['어디서 시작하나','{{도착 칸}}의 답을 구하는 데 필요한 작은 문제를 재귀로 푼다','{{출발 칸}}부터 표를 채워 올라간다'],
+  ['무엇으로 짜나','{{재귀}} + 동적 표','{{반복문}} + 동적 표'],
+  ['계산 순서','재귀 호출을 통해 필요한 작은 문제의 답부터 구한다','{{우리가 정한다}} (위 칸과 왼쪽 칸이 먼저)'],
+  ['채우는 칸','도착 칸에 {{필요한 칸만}}','이 코드에서는 {{표 전체}}']]),
+ S(2,`두 방법이 만든 표는 같다. 한 칸을 채우려면 {{위 칸과 왼쪽 칸이 먼저}} 채워져 있어야 한다. 순서를 잘못 정하면 아직 채우지 않은 칸을 읽게 된다. {{계산 순서도 설계의 일부}}이다.`)]);
+SE('dp','p9','7. 격자를 키워서 비교하기',[
+ S(1,`시간은 컴퓨터마다 다르므로 {{호출 횟수}}를 주로 본다. 상향식은 재귀 호출을 하지 않으므로 {{채운 칸의 수}}를 센다.`),
+ T(2,['격자','길의 수','적어 두지 않기 (호출)','하향식 (호출)','상향식 (채운 칸)'],[
+  ['6×6','252','923','[[61]]','[[36]]'],
+  ['10×10','48,620','184,755','[[181]]','[[100]]'],
+  ['12×12','705,432','[[2,704,155]]','[[265]]','[[144]]']]),
+ S(2,`적어 두지 않으면 호출 횟수가 {{길의 수}}를 따라 늘어난다. 한 변이 몇 칸만 늘어도 호출 횟수는 수십 배가 될 수 있다.`),
+ S(2,`동적 표에 적어 두면 {{칸의 수}}를 따라 늘어난다. 하향식은 각 좌표로 많아야 두 번, 상향식은 칸마다 한 번 채운다.`),
+ S(2,`같은 점화식, 같은 기저 사례인데 {{작은 문제의 답을 적어 두었느냐}}만으로 이만큼 달라진다.`)]);
+SE('dp','p10','8. 분할 정복과 동적 계획법 비교',[
+ T(2,['','분할 정복 (지난 시간)','동적 계획법 (오늘)'],[
+  ['작은 문제의 답으로 큰 문제를 푼다','그렇다','그렇다'],
+  ['오늘 본 예에서','안경 세기: 학년마다 {{다른}} 학생을 다룬다','격자: {{똑같은}} 칸의 답이 여러 곳에서 필요하다'],
+  ['작은 문제의 답','구한 {{자리에서}} 쓴다','{{동적 표에 적어 두고}} 필요한 곳마다 꺼내 쓴다'],
+  ['계산 순서','큰 문제를 나누며 {{내려간다}}','내려가며 구하거나({{하향식}}), 작은 문제부터 쌓아 올라간다({{상향식}})'],
+  ['예','병합 정렬, 이진 탐색, 안경 쓴 학생 세기','격자의 길 세기, 피보나치 수']]),
+ S(2,`2ⁿ 의 ②는 똑같은 두 반쪽(2⁵ 와 2⁵)을 {{두 번}} 구했고, ③은 {{한 번만}} 구해 제곱했다. 분할 정복으로 설계한 알고리즘에서도 똑같은 작은 문제의 답을 다시 쓰면 계산이 줄어든다.`),
+ S(2,`이때는 한 번 구한 값을 바로 제곱하면 되므로 표 대신 {{변수 하나}}에 저장하는 것으로 충분했다. 격자처럼 똑같은 작은 문제의 답이 {{여러 곳에서 여러 번}} 필요하면 답을 표에 차례대로 적어 두는 동적 계획법이 알맞다.`),
+ S(2,`작은 문제의 답을 한 번 구해 다시 쓴다는 사실만으로 동적 계획법이라고 부르지는 않는다. 여러 곳에서 필요한 작은 문제의 답을 {{표에 적어 두고}}, 그 답으로 더 큰 문제의 답을 구해 반복 계산을 줄였을 때 동적 계획법이다.`)]);
+SE('dp','p11','오늘 정리 + 스스로 해 보기',[
+ T(2,['오늘 배운 것',''],[
+  ['동적 계획법','작은 문제의 답을 {{동적 표}}에 적어 두고 그 답으로 더 큰 문제의 답을 구한다'],
+  ['이용하는 성질','① 작은 문제의 답으로 큰 문제의 답을 만들 수 있다 ② 똑같은 작은 문제의 답이 여러 곳에서 필요하다'],
+  ['설계 네 단계','[[① 작은 문제 · ② 점화식 · ③ 기저 사례 · ④ 계산 순서]]'],
+  ['격자에서','P(r, c) = (r, c) 까지 오는 길의 수 · P(r, c) = P(r − 1, c) + P(r, c − 1) · P(0, 0) = 1 (가장자리에서는 격자 안에 있는 쪽만 더한다)'],
+  ['하향식','재귀로 내려가며 구하고, 구하기 {{전에 표를 보고}}, 구한 {{뒤에 표에 적는다}}'],
+  ['상향식','작은 문제부터 표를 채운다. 기저 사례의 답을 먼저 적고, 채우는 {{순서}}를 우리가 정한다'],
+  ['효과','6×6 에서 호출 횟수 923번 → {{61번}}. 길의 수가 아니라 {{칸의 수}}를 따라 늘어난다'],
+  ['이미 푼 문제 알아보기','무엇이 같으면 {{똑같은 문제}}인지, 즉 ① 작은 문제를 먼저 정해야 한다'],
+  ['분할 정복과 비교','똑같은 작은 문제의 답이 여러 곳에서 필요할수록 적어 두고 다시 쓰는 효과가 크다']]),
+ K(`다음 시간 · 탐욕 알고리즘 설계`),
+ S(2,`(스스로 해 보기 1) 비용이 적힌 격자의 최소 비용 @@B(r, c)@@ 는 네 단계를 그대로 따른다. ① 작은 문제 : (r, c) 까지 오는 {{가장 적은 비용}}. ② 점화식 : @@B(r,c) = cost[r][c] + min(B(r-1,c), B(r,c-1))@@ — 위 칸과 왼쪽 칸 중 {{더 작은 쪽}}을 고른다. ③ 기저 : @@B(0,0) = cost[0][0]@@. ④ 순서 : 위 줄부터, 왼쪽부터.`),
+ C(1,'스스로 해 보기 1 · 최소 비용 격자 (정답 15)',`cost = [
+    [3, 1, 4, 8],
+    [2, 9, 1, 5],
+    [6, 5, 3, 2],
+    [7, 4, 8, 1],
+]
+
+def min_cost(cost):
+    N = len(cost)
+    B = [[0] * N for _ in range(N)]
+    for r in range(N):
+        for c in range(N):
+            if r == 0 and c == 0:
+                B[r][c] = cost[0][0]
+            elif r == 0:
+                B[r][c] = B[r][c-1] + cost[r][c]
+            elif c == 0:
+                B[r][c] = B[r-1][c] + cost[r][c]
+            else:
+                B[r][c] = min(B[r-1][c], B[r][c-1]) + cost[r][c]
+    return B[N-1][N-1]
+
+print(min_cost(cost))   # 15`,'교재는 힌트만 주었고, 위 코드는 네 단계를 따라 정리한 예시 답이다.'),
+ S(2,`(스스로 해 보기 2 · 외판원) 도시 0에서 출발해 모든 도시를 한 번씩 들르고 돌아오는 최단 거리. 나머지 도시를 도는 순서는 도시 4개일 때 {{3! = 6가지}}, 10개이면 {{9! = 362,880가지}}, 11개이면 {{10! = 3,628,800가지}}.`),
+ S(2,`외판원에서는 '지금 있는 도시'만으로는 부족하다. 작은 문제를 정하려면 {{지금 있는 도시}}와 {{이미 들른 도시들}}을 알아야 한다. 표의 칸은 @@(S, now)@@ — 들른 도시들(비트로 표시), 지금 도시.`),
+ S(1,`들른 도시는 비트로 적는다. 도시 j 를 들렀나 @@(S & (1 << j)) != 0@@, 들렀다고 표시 @@S | (1 << j)@@, 다 들렀나 @@S == (1 << n) - 1@@. 오른쪽 끝 비트가 도시 0이다.`),
+ T(2,['','격자 (5절)','외판원'],[
+  ['동적 표의 칸','(r, c)','(S, now) — {{들른 도시들}}, {{지금 도시}}'],
+  ['점화식','위 칸과 왼쪽 칸을 {{더한다}}','남은 도시마다 \'그 도시까지의 거리 + 그 뒤 남은 가장 짧은 거리\'를 구해 {{가장 작은 것}}을 고른다'],
+  ['기저 사례','출발 칸이면 1','다 들렀으면 {{0으로 돌아가는 거리}}'],
+  ['코드 모양','표를 본다 → 기저 사례 → 점화식 → 표에 적는다','{{같다}}']]),
+ S(2,`도시 4개의 최소 이동 거리는 {{80}}, 경로는 {{0 → 1 → 3 → 2 → 0}}. 16번 호출 가운데 {{3번}}은 표에서 꺼내 썼다. 도시 10개에서는 모든 순서가 362,880가지인데 동적 계획법은 {{9,226번}} 호출되어 같은 답을 낸다(6,921번은 표에서 꺼내 씀).`),
+ S(2,`동적 계획법을 설계할 때는 '표의 한 칸에 {{무엇을 적을까}}'를 가장 먼저, 가장 오래 생각한다. 다만 외판원의 표 칸 수는 도시가 하나 늘 때마다 두 배 넘게 늘어나 도시가 아주 많으면 오래 걸린다.`)]);
+
+/* ====== 문제 은행 (수업 코드 기준) ====== */
+const PR=[];
+const NUM=(q,fields,exp,code,hint)=>({k:'num',q,fields:fields.map(f=>[f[0],String(f[1])]),exp,code,hint});
+const BLK=(q,code,exp,hint)=>({k:'blank',q,code,exp,hint});
+const TBL=(q,head,rows,exp,hint)=>({k:'table',q,head,rows,exp,hint});
+const TF=(q,ans,ok,a,exp,code)=>({k:'tf',q,ans,ok,a,exp:exp||a,code});
+const ESS=(q,a,ok,exp,hint)=>({k:'essay',q,a,ok,exp,hint});
+const COD=(q,a,ok,exp,hint)=>({k:'code',q,a,ok,exp,hint});
+const FIX=(q,code,a,ok,exp,hint)=>({k:'fix',q,code,a,ok,exp,hint});
+const ORD=(q,steps,exp)=>({k:'order',q,steps,exp});
+const P2=(id,t,lv,title,intro,parts)=>PR.push({id,t,lv,title,intro,parts});
+const tb=(M,fn)=>M.map((row,i)=>row.map((v,j)=>fn(i,j)?`{{${v}}}`:String(v)));
+
+/* --- 계산 도우미 (정답을 직접 계산해서 오류를 막는다) --- */
+const fibVal=n=>n<=2?1:fibVal(n-1)+fibVal(n-2);
+const fibCalls=n=>n<=2?1:1+fibCalls(n-1)+fibCalls(n-2);
+const fibCnt=(k,n)=>{let c=0;const f=m=>{if(m===k)c++;if(m<=2)return;f(m-1);f(m-2)};f(n);return c};
+const fibMemoCalls=n=>{const memo={};let c=0;const f=m=>{c++;if(m<=2)return 1;if(m in memo)return memo[m];return memo[m]=f(m-1)+f(m-2)};f(n);return c};
+const gP=(R,C)=>{const d=[];for(let i=0;i<R;i++){d.push([]);for(let j=0;j<C;j++)d[i][j]=(i===0&&j===0)?1:(i?d[i-1][j]:0)+(j?d[i][j-1]:0)}return d};
+const gCalls=(r,c)=>(r===0&&c===0)?1:1+(r>0?gCalls(r-1,c):0)+(c>0?gCalls(r,c-1):0);
+const gMemoCalls=(R,C)=>{const dt={};let n=0;const f=(r,c)=>{n++;const k=r+','+c;if(k in dt)return dt[k];let t=0;if(r===0&&c===0)t=1;else{if(r>0)t+=f(r-1,c);if(c>0)t+=f(r,c-1)}return dt[k]=t};f(R-1,C-1);return n};
+const gCalled=N=>{const a=Array.from({length:N},()=>Array(N).fill(0));const f=(r,c)=>{a[r][c]++;if(r===0&&c===0)return;if(r>0)f(r-1,c);if(c>0)f(r,c-1)};f(N-1,N-1);return a};
+const pOne=n=>n===0?[1,0]:((v)=>[2*v[0],v[1]+1])(pOne(n-1));
+const pBoth=n=>{if(n===0)return [1,0];if(n===1)return [2,0];const a=pBoth(Math.floor(n/2)),b=pBoth(n-Math.floor(n/2));return [a[0]*b[0],a[1]+b[1]+1]};
+const pBothCalls=n=>n<=1?1:1+pBothCalls(Math.floor(n/2))+pBothCalls(n-Math.floor(n/2));
+const pHalf=n=>{if(n===0)return [1,0];const h=pHalf(Math.floor(n/2));let r=h[0]*h[0],c=h[1]+1;if(n%2===1){r*=2;c++}return [r,c]};
+const cg=g=>typeof g==='number'?[g,1,1]:g.reduce((a,p)=>{const x=cg(p);return [a[0]+x[0],a[1]+x[1],a[2]+x[2]]},[0,1,0]);
+const bsTrace=(A,t)=>{let lo=0,hi=A.length-1;const o=[];while(true){if(lo>hi){o.push({lo,hi,mid:null,res:-1});break}const mid=Math.floor((lo+hi)/2);if(A[mid]===t){o.push({lo,hi,mid,res:mid});break}o.push({lo,hi,mid});if(A[mid]<t)lo=mid+1;else hi=mid-1}return o};
+const bsWorst=n=>{const A=Array.from({length:n},(_,i)=>2*i+1);let w=0;for(let t=0;t<=2*n+1;t++)w=Math.max(w,bsTrace(A,t).length);return w};
+const costG=[[3,1,4,8],[2,9,1,5],[6,5,3,2],[7,4,8,1]];
+const minCostTab=c=>{const N=c.length,B=c.map(r=>r.slice());for(let r=0;r<N;r++)for(let k=0;k<N;k++){if(!r&&!k)continue;const u=r?B[r-1][k]:Infinity,l=k?B[r][k-1]:Infinity;B[r][k]=c[r][k]+Math.min(u,l)}return B};
+const BSA=[11,14,23,27,31,42,55,68,74,89];
+const SCH=`school = [
+    [11, 12, 13, 14, 15],    # 1학년
+    [12, 13, 11, 14, 12],    # 2학년
+    [10, 12, 11, 13, 12],    # 3학년
+]`;
+const CGCODE=`def count_glasses(group):
+    if type(group) == int:
+        return group
+    total = 0
+    for part in group:
+        total = total + count_glasses(part)
+    return total`;
+
+/* ================= ② 분할 정복 ================= */
+/* --- 병합 정렬 --- */
+P2('m1','merge',1,'병합 정렬 · 단계 정리','병합 정렬과 퀵 정렬을 분할·정복·결합으로 정리한다.',[
+ TBL('표의 빈칸을 채우시오.',['','분할','정복','결합'],[['병합 정렬','{{반씩|절반씩|반으로}} 나눈다','원소가 {{하나 이하|1개 이하}}면 이미 정렬된 것','양쪽 {{맨 앞끼리 비교|맨 앞}}하며 하나로 합친다'],['퀵 정렬','{{기준값}}보다 작은 것·같은 것·큰 것으로 나눈다','원소가 하나 이하면 이미 정렬된 것','그냥 {{이어 붙인다|이어붙인다|붙인다}}']],'병합은 결합에서, 퀵은 분할에서 일한다.'),
+ ORD('병합 정렬이 동작하는 순서대로 배열하시오.',['원소가 하나 이하인지 확인한다 (맞으면 그대로 반환)','리스트를 반씩 나눈다','왼쪽·오른쪽을 각각 같은 방법으로 정렬한다','정렬된 두 리스트를 맨 앞끼리 비교하며 하나로 합친다'],'종료 조건 → 분할 → 정복(재귀) → 결합.'),
+ TF('"병합 정렬은 나눌 때 일하고, 퀵 정렬은 합칠 때 일한다."',false,[['병합','합칠','결합'],['퀵','나눌','분할']],'✕. 반대이다. 병합은 합칠 때, 퀵은 나눌 때 일한다.','병합 → 합칠 때 / 퀵 → 나눌 때')]);
+P2('m2','merge',2,'병합(merge) 직접 해 보기','정렬된 두 리스트 left = [1, 4, 6], right = [2, 3, 7]을 병합한다.',[
+ TBL('병합 과정 표의 빈칸을 채우시오.',['단계','비교','꺼낸 값','결과 리스트'],[['1','1 vs 2','1','[1]'],['2','4 vs 2','{{2}}','[1,2]'],['3','4 vs 3','{{3}}','[1,2,3]'],['4','4 vs 7','4','{{[1,2,3,4]}}'],['5','6 vs 7','{{6}}','[1,2,3,4,6]'],['6','left 소진','남은 7 붙임','{{[1,2,3,4,6,7]}}']],'맨 앞끼리 비교해 작은 것을 꺼낸다. 한쪽이 비면 남은 쪽을 그대로 붙인다.'),
+ BLK('merge 함수의 빈칸을 채우시오.',`def merge(l, r):
+    res, i, j = [], 0, 0
+    while i < len(l) and j < len(r):
+        if l[i] {{<=|<}} r[j]:
+            res.append(l[i]); i += 1
+        else:
+            res.append(r[j]); {{j+=1|j = j + 1}}
+    return res + l[i:] + {{r[j:]}}`,'반복이 끝나면 남은 쪽을 그대로 붙인다.'),
+ NUM('길이가 4인 정렬된 두 리스트를 병합할 때 비교 횟수의 최댓값과 최솟값은?',[['최대',7],['최소',4]],'최대: 번갈아 나오면 8-1 = 7번. 최소: 한쪽 4개가 먼저 모두 나오면 4번.',null,'비교는 한쪽이 바닥날 때까지만 필요해요.')]);
+P2('m3','merge',2,'병합 정렬 호출 횟수와 종료 조건','리스트를 반씩 나누어 원소가 하나 이하가 될 때까지 나눈다.',[
+ NUM('merge_sort 호출 횟수를 구하시오. (원소 n개이면 호출 트리의 노드 수)',[['n=4',7],['n=8',15],['n=8일 때 merge 호출',7]],'호출은 2n-1, merge는 n-1번.',null,'원소 4개: 4 + 2 + 1'),
+ ESS('병합 정렬의 종료 조건을 쓰고, 그 크기에서 멈춰도 되는 이유를 쓰시오.','원소가 하나 이하이면 더 나눌 수 없고 이미 정렬된 것이므로 그대로 반환한다.',[['하나이하','1개이하','원소가하나','길이가1','하나','1이하'],['반환','리턴','그대로'],['정렬']],'정복 단계가 종료 조건의 자리이다.'),
+ TF('"병합 정렬과 퀵 정렬의 종료 조건은 모두 원소가 하나 이하일 때이다."',true,[['하나','1개','1이하']],'○. 둘 다 원소가 하나 이하면 이미 정렬된 것이다.')]);
+P2('m4','merge',3,'병합 정렬 오류와 작성','종료 조건 오류와 코드 작성.',[
+ FIX('입력 [5]에서 무한 재귀(RecursionError)가 난다. 문제의 줄을 고쳐 쓰시오.',`def merge_sort(a):
+    if len(a) < 1:
+        return a
+    mid = len(a) // 2
+    return merge(merge_sort(a[:mid]), merge_sort(a[mid:]))`,'if len(a) <= 1:',[['<=1','<2']],'길이 1이면 mid=0, a[:0]=[], a[0:]=a 로 같은 입력이 계속 호출된다.','길이 1은 이미 정렬된 상태예요.'),
+ COD('merge 함수가 이미 있다고 할 때, 병합 정렬 함수 merge_sort(a)를 파이썬으로 쓰시오.',`def merge_sort(a):
+    if len(a) <= 1:
+        return a
+    mid = len(a) // 2
+    left = merge_sort(a[:mid])
+    right = merge_sort(a[mid:])
+    return merge(left, right)`,[['def'],['len(a)<=1'],['returna'],['merge_sort(a[:mid])'],['merge_sort(a[mid:])'],['merge(']],'종료 조건 → 분할 → 정복 → 결합.','종료 조건, 반씩 나누기, 두 번 재귀, merge.'),
+ ESS('[3, 1]과 [4, 2]를 각각 정렬해도 결합(병합) 단계가 필요한 이유를 쓰시오.','각각 정렬해도 [1, 3]과 [2, 4]는 값이 서로 섞여 있어 전체가 정렬된 것이 아니다. 두 정렬된 리스트를 하나로 합치는 결합 단계가 있어야 [1, 2, 3, 4]가 된다.',[['결합','병합','합'],['섞','전체','하나','[1,2,3,4]','1,2,3,4']],'부분이 정렬 ≠ 전체가 정렬.','각각 정렬된 두 리스트를 이어 붙이면?')]);
+
+/* --- 리스트 합·개수 (count_glasses) --- */
+P2('s1','sum',1,'안경 쓴 학생 세기 기본',`아래 데이터와 count_glasses 함수를 본다.\n${SCH}`,[
+ BLK('count_glasses의 빈칸을 채우시오.',`def count_glasses(group):
+    if {{type(group)==int|type(group) == int}}:
+        return {{group}}
+    total = 0
+    for part in {{group}}:
+        total = total + count_glasses({{part}})
+    return total`,'정수 하나이면 한 반이고, 그 값을 그대로 반환한다.'),
+ TBL('그림의 내용과 분할 정복 단계를 짝지어 쓰시오.',['그림에서','단계'],[['학교 → 학년 → 반으로 내려간다','{{분할}}'],['반에서 직접 센다','{{정복}}'],['위로 더해 올라간다','{{결합}}']],'내려가기 = 분할, 직접 세기 = 정복, 더해 올라가기 = 결합.'),
+ NUM('count_glasses(school[1])과 count_glasses(school[2][3])의 값은?',[['school[1]',cg([12,13,11,14,12])[0]],['school[2][3]',13]],'school[1] = 12+13+11+14+12 = 62, school[2][3] 은 정수 13.',null,'school[1]은 2학년 리스트, school[2][3]은 3학년 4번째 반.')]);
+{const g=[[3,4],[5,[1,2]],6],r=cg(g);
+P2('s2','sum',2,'중첩 리스트 추적',`group = [[3, 4], [5, [1, 2]], 6] 에 count_glasses를 적용한다. (정수 하나가 종료 조건)\n${CGCODE}`,[
+ NUM('count_glasses(group)의 반환값, 호출 횟수, 종료 조건에 걸리는 호출 횟수는?',[['반환값',r[0]],['호출 횟수',r[1]],['종료 조건 호출',r[2]]],'호출은 리스트 노드 + 정수 노드. 정수 6개가 종료 조건에 걸린다.',null,'호출 트리를 그려 보세요. 리스트와 정수가 모두 호출됩니다.'),
+ TF('"학년별로 나눈 문제는 서로 같은 문제이므로 1학년만 구하면 나머지 학년의 답도 알 수 있다."',false,[['다른','다르'],['더해','모두','따로']],'✕. 같은 종류의 문제이지만 서로 다른 학생을 다루므로 모두 풀어서 더해야 한다.','같은 종류 ≠ 똑같은'),
+ ESS('(쓰기) 학년별로 나누면 무엇을 구하는 문제가 남는가? 그것이 원래 문제와 같은 종류라고 말할 수 있는 근거를 한 문장으로 쓰시오.','각 학년에서 안경 쓴 학생 수를 구하는 문제가 남는다. 그룹 안에서 안경 쓴 학생 수 세기이고 범위만 작아졌으므로 같은 종류의 문제이다.',[['학년'],['같은'],['범위','작']],'같은 종류 = 구하는 것이 같고 크기만 작다.')])}
+P2('s3','sum',2,'절반으로 나누는 합과 개수','A = [4, 1, 3, 2] 의 합을 total(A, lo, hi)로 구한다. (lo == hi 이면 A[lo], 아니면 mid = (lo+hi)//2 에서 둘로 나눠 더한다)',[
+ TBL('호출 (lo, hi)별 반환값을 채우시오.',['호출 (lo, hi)','반환값'],[['(0, 3)','{{10}}'],['(0, 1)','{{5}}'],['(2, 3)','{{5}}'],['(0, 0)','4'],['(1, 1)','1'],['(2, 2)','3'],['(3, 3)','2']],'아래쪽 호출부터 값이 올라오며 더해진다.'),
+ COD('리스트 A의 lo~hi 구간에서 값 x가 몇 개인지 세는 count_x(A, lo, hi, x)를 절반 분할로 쓰시오.',`def count_x(A, lo, hi, x):
+    if lo == hi:
+        return 1 if A[lo] == x else 0
+    mid = (lo + hi) // 2
+    return count_x(A, lo, mid, x) + count_x(A, mid + 1, hi, x)`,[['def'],['lo==hi'],['mid=(lo+hi)//2'],['count_x(a,lo,mid,x)','count_x(a,lo,mid,x)'],['mid+1']],'종료: 원소 하나가 x인지. 결합: 두 개수를 더한다.','종료 조건은 원소 하나, 결합은 더하기.'),
+ NUM('원소가 8개일 때 total의 호출 횟수와 덧셈 횟수는?',[['호출 횟수',15],['덧셈 횟수',7]],'호출 2n-1, 덧셈은 안쪽 노드 n-1.')]);
+{const r=cg([[11,12,13,14,15],[12,13,11,14,12],[10,12,11,13,12]]);
+P2('s4','sum',3,'count_glasses 오류 분석','종료 조건과 반환 위치를 분석한다.',[
+ FIX('count_glasses(school)이 185가 아니라 11이 나온다. 고쳐 쓰시오.',`def count_glasses(group):
+    if type(group) == int:
+        return group
+    total = 0
+    for part in group:
+        total = total + count_glasses(part)
+        return total`,`    for part in group:
+        total = total + count_glasses(part)
+    return total`,[['return'],['total']],'return total 이 for 안에 있어 첫 부분만 더하고 끝난다. for 밖으로 내어쓴다.','return의 들여쓰기를 확인하세요.'),
+ NUM('school(위 데이터)에 count_glasses를 적용할 때 전체 호출 횟수와 종료 조건에 걸리는 호출 횟수는?',[['전체 호출',r[1]],['종료 조건 호출',r[2]]],'학교 1 + 학년 3 + 반 15 = 19, 반(정수) 15개가 종료 조건에 걸린다.'),
+ ESS('count_glasses에서 종료 조건 두 줄(@@if type(group) == int@@, @@return group@@)을 지우면 어떻게 되는지 쓰시오.','맨 아래 반(정수)에서도 for part in group 을 하려 하므로 int 는 반복할 수 없다는 TypeError가 난다. 종료 조건이 없어 멈출 자리가 없다.',[['typeerror','오류','에러'],['정수','int','반'],['종료']],'종료 조건이 없으면 끝없이 부르거나(RecursionError) 다른 오류가 난다. 여기서는 TypeError.','맨 아래 group은 정수 하나예요.')])}
+
+/* --- 최댓값·최솟값 --- */
+P2('x1','max',1,'최댓값 기본','find_max(A, lo, hi): lo == hi 이면 A[lo], 아니면 mid = (lo+hi)//2 에서 둘로 나눠 더 큰 쪽을 반환한다.',[
+ NUM('A = [4, 8, 1, 6] 일 때 find_max(A, 0, 3)의 반환값과 find_max 호출 횟수는?',[['반환값',8],['호출 횟수',7]],'호출 트리: 1 + 2 + 4 = 7.'),
+ ORD('find_max의 동작 순서대로 배열하시오.',['lo == hi 이면 A[lo]를 반환한다 (종료 조건)','mid를 구해 구간을 둘로 나눈다','왼쪽 구간의 최댓값을 재귀로 구한다','오른쪽 구간의 최댓값을 재귀로 구한다','둘 중 큰 값을 반환한다 (결합)'],'종료 → 분할 → 정복 두 번 → 결합.'),
+ TF('"find_max의 결합 단계는 두 부분의 답을 더하는 것이다."',false,[['큰','max','최댓값']],'✕. 결합은 더하기가 아니라 두 답 중 큰 것을 고르는 것이다.')]);
+P2('x2','max',2,'최솟값과 호출 표','A = [7, 2, 9, 4] 의 최댓값을 구한다.',[
+ TBL('각 호출의 left, right 값과 반환값을 채우시오.',['호출 (lo, hi)','left','right','반환'],[['(0, 3)','{{7}}','{{9}}','{{9}}'],['(0, 1)','7','2','{{7}}'],['(2, 3)','9','4','{{9}}']],'left는 왼쪽 구간의 최댓값, right는 오른쪽 구간의 최댓값.'),
+ BLK('최솟값 함수의 빈칸을 채우시오.',`def find_min(A, lo, hi):
+    if lo == {{hi}}:
+        return A[{{lo}}]
+    mid = (lo + hi) // 2
+    return {{min}}(find_min(A, lo, mid), find_min(A, mid + 1, hi))`,'기저: 원소 하나, 결합: 더 작은 값.'),
+ ESS('최댓값 구하기에서 나눈 구간이 분할 정복의 "작은 문제" 두 조건을 만족하는 이유를 쓰시오.','구간의 최댓값을 구하는 문제는 구하려는 답의 성질이 원래 문제와 같고, 다루는 대상(구간)이 원래 대상의 일부이다.',[['같은','동일','성질'],['일부','작','구간']],'조건 ① 같은 성질 ② 대상의 일부.')]);
+P2('x3','max',2,'최댓값 분석과 오류','분할 정복 최댓값 코드를 분석한다.',[
+ NUM('원소가 10개일 때 find_max의 호출 횟수와 비교(max) 횟수는?',[['호출 횟수',19],['비교 횟수',9]],'리프가 n개인 이진 트리의 노드는 2n-1, 안쪽 노드(비교)는 n-1.'),
+ FIX('find_max([3, 9, 2], 0, 2)가 9가 아니라 2를 반환한다. 고쳐 쓰시오.',`def find_max(A, lo, hi):
+    if lo == hi:
+        return A[lo]
+    mid = (lo + hi) // 2
+    return min(find_max(A, lo, mid), find_max(A, mid + 1, hi))`,'return max(find_max(A, lo, mid), find_max(A, mid + 1, hi))',[['max']],'결합은 큰 값을 골라야 한다.','결합 함수를 확인하세요.'),
+ TF('"find_max의 종료 조건 lo == hi 에서 A[lo]를 반환하는 것은, 원소가 하나이면 그 원소가 최댓값이기 때문이다."',true,[['하나','1개'],['최댓값','최대']],'○. 원소가 하나이면 그 원소가 최댓값이므로 정복 단계에서 바로 풀리는 크기이다.')]);
+P2('x4','max',3,'최댓값 작성과 결합','최댓값 문제의 설계를 서술한다.',[
+ COD('A의 lo~hi 구간의 최댓값을 구하는 find_max를 분할 정복으로 쓰시오.',`def find_max(A, lo, hi):
+    if lo == hi:
+        return A[lo]
+    mid = (lo + hi) // 2
+    left = find_max(A, lo, mid)
+    right = find_max(A, mid + 1, hi)
+    return max(left, right)`,[['def'],['lo==hi'],['returna[lo]'],['mid=(lo+hi)//2'],['find_max(a,lo,mid)','find_max(a,lo,mid)'],['max']],'종료 조건, 분할, 정복, 결합(max).','종료는 원소 하나, 결합은 max.'),
+ NUM('원소 8개일 때 최대 재귀 깊이(동시에 쌓이는 호출 수)를 "절반으로 나누는 방식"과 "맨 앞 하나 + 나머지" 방식으로 쓰시오.',[['절반 방식',4],['맨앞+나머지',8]],'절반: 8,4,2,1 → 4. 맨앞+나머지: 8,7,…,1 → 8.'),
+ ESS('최댓값 문제를 분할 정복 세 단계로 쓰시오.','분할: 구간을 가운데에서 둘로 나눈다. 정복: 원소가 하나이면 그 값이 최댓값이다. 결합: 두 구간의 최댓값 중 더 큰 값을 고른다.',[['분할','나눈','나누'],['정복','하나','직접'],['결합','큰','max']],'3단계 키워드.')]);
+
+/* --- 정렬 여부 (is_sorted) --- */
+P2('t1','sorted',1,'is_sorted 기본','의사 코드 IsSorted(A, lo, hi)를 파이썬으로 옮긴다.',[
+ BLK('빈칸을 채우시오.',`def is_sorted(A, lo, hi):
+    if lo {{==}} hi:
+        return {{True}}
+    mid = (lo + hi) {{//}} 2
+    left = is_sorted(A, lo, mid)
+    right = is_sorted(A, mid + 1, hi)
+    return left and right and A[mid] {{<=}} A[mid + 1]`,'한 명이면 늘 순서대로. 결합에서 경계를 비교한다.'),
+ NUM('A = [150, 152, 155, 160, 163] 일 때 is_sorted(A, 0, 4)의 반환값과 호출 횟수는? (left와 right를 항상 둘 다 계산한다)',[['반환값','True'],['호출 횟수',9]],'호출 트리의 노드 수 2n-1 = 9.',null,'left, right를 각각 변수에 먼저 계산해 둡니다.'),
+ TF('"앞쪽도 순서대로, 뒤쪽도 순서대로이면 전체도 반드시 순서대로이다."',false,[['경계','163','152','마지막','A[mid]']],'✕. [150, 163]과 [152, 160]을 붙이면 163 > 152 로 순서가 깨진다. 경계를 비교해야 한다.','[150,163]과 [152,160]을 붙여 보세요.')]);
+P2('t2','sorted',2,'is_sorted 추적','B = [150, 163, 152, 160] 에 is_sorted(B, 0, 3)을 적용한다.',[
+ TBL('각 호출의 mid와 경계 비교 결과를 채우시오.',['호출 (lo, hi)','mid','A[mid] <= A[mid+1]','반환값'],[['(0, 3)','{{1}}','163 <= 152 → {{False}}','{{False}}'],['(0, 1)','{{0}}','150 <= 163 → True','{{True}}'],['(2, 3)','{{2}}','152 <= 160 → {{True}}','True']],'(0,3)의 경계는 A[1]과 A[2]. 앞쪽·뒤쪽은 각각 True지만 경계에서 False.'),
+ NUM('위 호출에서 is_sorted의 전체 호출 횟수와 경계 비교 횟수(결합에서 A[mid] <= A[mid+1]를 평가하는 횟수)는?',[['전체 호출',7],['경계 비교',3]],'left, right를 항상 먼저 계산하므로 호출은 2n-1 = 7, 안쪽 노드는 3개.'),
+ ESS('결합 줄이 이 문제의 핵심인 이유를 [150, 163]과 [152, 160]을 예로 쓰시오.','앞쪽 [150, 163]도 순서대로, 뒤쪽 [152, 160]도 순서대로이지만 붙이면 163 > 152 라 전체는 순서대로가 아니다. 그래서 앞쪽의 마지막과 뒤쪽의 첫 값을 비교하는 경계 확인이 필요하다.',[['163','152','경계','마지막'],['첫','A[mid+1]','뒤쪽'],['순서대로','아니','깨']],'결합 = left and right and 경계.','left, right만으로는 부족해요.')]);
+P2('t3','sorted',2,'is_sorted 오류와 종료 조건','결합 누락과 종료 조건 제거를 분석한다.',[
+ FIX('B = [150, 163, 152, 160] 에서 is_sorted(B, 0, 3)이 False가 아니라 True가 나온다. 마지막 줄을 고쳐 쓰시오.',`def is_sorted(A, lo, hi):
+    if lo == hi:
+        return True
+    mid = (lo + hi) // 2
+    left = is_sorted(A, lo, mid)
+    right = is_sorted(A, mid + 1, hi)
+    return left and right`,'return left and right and A[mid] <= A[mid + 1]',[['a[mid]<=a[mid+1]','a[mid]<a[mid+1]'],['left','right']],'결합에서 경계를 확인하지 않았다.','결합 줄을 떠올리세요.'),
+ TF('"is_sorted_test에서 if lo == hi: 와 return True 두 줄을 지우고 실행하면 IndexError가 난다."',false,[['recursion','재귀','무한','끝없이']],'✕. RecursionError가 난다. 종료 조건이 없어 함수가 끝없이 자기 자신을 부르기 때문이다.','종료 조건이 없으면 끝없이 부릅니다.'),
+ ESS('종료 조건이 갖추어야 할 두 가지를 쓰시오.','① 더 나누지 않고 답을 바로 반환한다. ② 계속 나누면 언젠가는 반드시 종료 조건에 이른다.',[['바로','반환'],['언젠가','반드시','결국']],'is_sorted의 종료 조건은 lo == hi 이고 답은 True.')]);
+P2('t4','sorted',3,'is_sorted 응용','경계 조건을 바꾸고 비교한다.',[
+ COD('같은 키가 없이 "엄격하게" 작은 것부터 서 있는지 확인하는 is_strict(A, lo, hi)를 쓰시오. (is_sorted와 같은 구조에서 한 군데만 바뀐다)',`def is_strict(A, lo, hi):
+    if lo == hi:
+        return True
+    mid = (lo + hi) // 2
+    left = is_strict(A, lo, mid)
+    right = is_strict(A, mid + 1, hi)
+    return left and right and A[mid] < A[mid + 1]`,[['def'],['lo==hi'],['returntrue'],['a[mid]<a[mid+1]'],['mid+1']],'결합 줄의 <= 만 < 로 바뀐다.','바뀌는 곳은 경계 비교 연산자.'),
+ NUM('원소가 1000개일 때 is_sorted의 호출 횟수와 경계 비교 횟수는? (left, right를 항상 둘 다 계산)',[['호출 횟수',1999],['경계 비교 횟수',999]],'호출 2n-1, 경계 비교 n-1.'),
+ TBL('두 문제를 비교해 빈칸을 채우시오.',['','안경 쓴 학생 세기','키 순서 확인'],[['분할','학교 → 학년 → 반 (여럿)','줄의 가운데에서 {{둘|2개|두 개}}로'],['정복','한 반이면 센 수를 그대로','한 명이면 {{True|참}}'],['결합','부분의 답을 {{더하기만}} 하면 된다','두 답에 더해 {{경계|A[mid]<=A[mid+1]}}까지 봐야 한다']],'결합이 단순 더하기인지, 경계까지 봐야 하는지가 차이.')]);
+
+/* --- 거듭제곱 (2ⁿ) --- */
+P2('e1','pow',1,'2ⁿ 세 가지 분할','2ⁿ을 세 가지 방법으로 나누어 구한다.',[
+ TBL('2¹⁰ 을 각 방법으로 나눈 모양의 빈칸을 채우시오.',['방법','2¹⁰ 을 나누면','결합'],[['① 지수를 1씩 줄이기','2⁹ × {{2}}','2 를 한 번 곱한다'],['② 반으로 나누어 둘 다 풀기','2⁵ × 2⁵ 에서 2⁵ 를 {{두 번|2번}} 구한다','두 답을 {{곱한다|곱함}}'],['③ 반으로 나누어 하나만 풀기','(2⁵)² 에서 2⁵ 를 {{한 번|1번}} 구한다','{{제곱|제곱한다}}']],'세 방법 모두 같은 종류의 더 작은 거듭제곱 문제로 나눈다.'),
+ NUM('n = 6 일 때 power_one, power_both, power_half 가 반환하는 곱셈 횟수는?',[['power_one(6)',pOne(6)[1]],['power_both(6)',pBoth(6)[1]],['power_half(6)',pHalf(6)[1]]],'① n번, ② n-1번, ③ 제곱마다 1번 + 홀수일 때 1번 추가.',null,'power_half(6): 6 → 3 → 1 → 0 순서로 내려갑니다.'),
+ TF('"②는 반으로 나누었으므로 ①보다 훨씬 효율적이다."',false,[['거의','비슷','같'],['모두','둘 다','두 쪽']],'✕. 나눈 두 부분을 모두 풀기 때문에 ①과 거의 같다. 나누기만 해서는 빨라지지 않는다.','②는 두 쪽을 각각 구합니다.')]);
+P2('e2','pow',2,'곱셈 횟수 표','곱셈 횟수를 비교한다.',[
+ TBL('곱셈 횟수 표의 빈칸을 채우시오.',['2ⁿ','① 1씩 줄이기','② 둘 다 풀기','③ 하나만 풀기'],[['n = 10',`{{${pOne(10)[1]}}}`,`{{${pBoth(10)[1]}}}`,`{{${pHalf(10)[1]}}}`],['n = 100',`{{${pOne(100)[1]}}}`,`{{${pBoth(100)[1]}}}`,`{{${pHalf(100)[1]}}}`],['n = 500',`{{${pOne(500)[1]}}}`,`{{${pBoth(500)[1]}}}`,`{{${pHalf(500)[1]}}}`]],'①은 n, ②는 n-1, ③은 몇 번뿐.'),
+ NUM('power_half의 곱셈 횟수를 구하시오.',[['n = 64',pHalf(64)[1]],['n = 1000',pHalf(1000)[1]]],'각 단계에서 제곱 1번, 홀수이면 1번 추가.',null,'n을 2로 나누며 내려갑니다.'),
+ ESS('③이 ①②보다 빠른 이유를 쓰시오.','2ⁿ을 나눈 두 반쪽(2⁵와 2⁵)이 똑같다는 것을 이용해 하나만 구하고 그 답을 제곱하기 때문이다. 그래서 n이 커져도 곱셈은 몇 번밖에 늘지 않는다.',[['똑같','같은'],['하나','한 번','한번'],['제곱']],'나눈 두 문제가 똑같으면 하나만 풀어도 된다.')]);
+P2('e3','pow',2,'2ⁿ 코드 빈칸','power_half와 power_both의 코드를 완성한다.',[
+ BLK('power_half의 빈칸을 채우시오.',`def power_half(n):
+    if n == 0:
+        return {{1}}, 0
+    half, c = power_half({{n // 2|n//2}})
+    result = {{half * half|half*half}}
+    c += 1
+    if n % 2 == {{1}}:
+        result = result * {{2}}
+        c += 1
+    return result, c`,'n 이 홀수이면 2를 한 번 더 곱한다.'),
+ BLK('power_both의 빈칸을 채우시오.',`def power_both(n):
+    if n == 0:
+        return 1, 0
+    if n == {{1}}:
+        return {{2}}, 0
+    a, c1 = power_both(n // 2)
+    b, c2 = power_both({{n - n // 2|n-n//2}})
+    return {{a * b|a*b}}, c1 + c2 + 1`,'두 쪽의 크기는 n//2 와 n-n//2.'),
+ NUM('power_both(6)의 호출 횟수와 반환값(2⁶)은?',[['호출 횟수',pBothCalls(6)],['반환값',64]],'power_both(6) → (3, 3), 3 → (1, 2), 2 → (1, 1) …')]);
+P2('e4','pow',3,'2ⁿ 종료 조건 분석','종료 조건이 둘인 이유와 오류.',[
+ FIX('power_both(1)을 호출하면 RecursionError가 난다. 어떤 줄이 빠졌는지 쓰고 그 줄을 쓰시오.',`def power_both(n):
+    if n == 0:
+        return 1, 0
+    a, c1 = power_both(n // 2)
+    b, c2 = power_both(n - n // 2)
+    return a * b, c1 + c2 + 1`,`if n == 1:
+    return 2, 0`,[['n==1'],['return2,0','return2']],'n = 1 이면 n//2 = 0, n - n//2 = 1 이라 power_both(1)을 다시 부른다.','n = 1 일 때 두 쪽의 크기는?'),
+ ESS('power_both는 종료 조건이 n == 0 과 n == 1 두 개인데, power_half는 n == 0 하나뿐이다. 이유를 쓰시오.','power_both는 n = 1 을 n//2 = 0 과 n - n//2 = 1 로 나누므로 n = 1 이 자기 자신으로 돌아와 멈추지 않는다. 그래서 n = 1 도 직접 답을 반환해야 한다. power_half는 n//2 만 부르므로 n = 1 이면 n = 0 으로 줄어든다.',[['n=1','1일','1이'],['자기','자신','다시','멈추지','줄어들지'],['n//2','0']],'종료 조건 ②: 계속 나누면 언젠가는 반드시 종료 조건에 이른다.'),
+ NUM('power_half(500)과 power_one(500)의 곱셈 횟수 차이는 몇 번인가?',[['① - ③ 차이',pOne(500)[1]-pHalf(500)[1]]],'① 500번, ③ 15번.')]);
+
+/* --- 이진 탐색 --- */
+P2('b1','bs',1,'이진 탐색 기본',`A = [11, 14, 23, 27, 31, 42, 55, 68, 74, 89] 에서 재귀 이진 탐색을 한다.`,[
+ TBL('이진 탐색을 분할·정복·결합으로 정리하시오.',['단계','이진 탐색'],[['분할','남은 후보를 {{왼쪽 반|오른쪽 반|반}}으로 줄인다'],['정복','가운데 값이 찾는 값이면 {{mid}} 를 반환, 남은 후보가 없으면 {{-1}} 을 반환'],['결합','{{할 일이 없다|없다}}']],'한쪽만 풀기 때문에 결합할 일이 없다.'),
+ BLK('빈칸을 채우시오.',`def binary_search_rec(A, target, lo, hi):
+    if lo {{>}} hi:
+        return {{-1}}
+    mid = (lo + hi) // 2
+    if A[mid] == target:
+        return {{mid}}
+    elif A[mid] < target:
+        return binary_search_rec(A, target, {{mid+1}}, hi)
+    else:
+        return binary_search_rec(A, target, lo, {{mid-1}})`,'이미 비교한 mid 는 제외한다.'),
+ NUM('target = 27 일 때 첫 mid의 인덱스, 호출 횟수, 반환값은?',[['첫 mid',bsTrace(BSA,27)[0].mid],['호출 횟수',bsTrace(BSA,27).length],['반환값',3]],'mid: 4(31) → 1(14) → 2(23) → 3(27).',null,'(lo + hi) // 2 를 차례로 계산해 보세요.')]);
+{const t=bsTrace(BSA,100);
+P2('b2','bs',2,'이진 탐색 추적',`A = [11, 14, 23, 27, 31, 42, 55, 68, 74, 89], target = 100 (없는 값)`,[
+ TBL('호출 추적표의 빈칸을 채우시오.',['호출','lo','hi','mid','A[mid]'],t.map((x,i)=>[String(i+1),String(x.lo),String(x.hi),x.mid===null?'-':`{{${x.mid}}}`,x.mid===null?'lo > hi → -1':`{{${BSA[x.mid]}}}`]),'target이 크면 lo = mid + 1 로 오른쪽 반만 본다. 마지막은 lo > hi.'),
+ ESS('이진 탐색의 종료 조건 두 가지와, 결합 단계에서 할 일을 쓰시오.','종료 조건은 ① 찾았을 때(A[mid] == target이면 mid 반환) ② 남은 후보가 없을 때(lo > hi 이면 -1 반환)이다. 한쪽 반만 풀어서 그 답이 그대로 전체의 답이 되므로 결합에서 할 일은 없다.',[['a[mid]==','찾'],['lo>hi','남은후보','후보가없'],['할일이없','그대로','결합']],'종료 조건은 둘, 결합은 없음.'),
+ TF('"이진 탐색은 나눈 두 반쪽을 모두 풀고 답을 결합한다."',false,[['한쪽','하나'],['결합','할일']],'✕. 가운데 값과 비교해 답이 있을 한쪽만 푼다. 결합할 일이 없다.')])}
+P2('b3','bs',3,'이진 탐색 오류와 일하는 자리','오류 수정과 병합·퀵·이진 탐색 비교.',[
+ FIX('A = [1, 3], target = 4 일 때 무한 재귀가 발생한다. 재귀 호출 두 줄을 고쳐 쓰시오.',`    elif A[mid] < target:
+        return binary_search_rec(A, target, mid, hi)
+    else:
+        return binary_search_rec(A, target, lo, mid)`,`    elif A[mid] < target:
+        return binary_search_rec(A, target, mid + 1, hi)
+    else:
+        return binary_search_rec(A, target, lo, mid - 1)`,[['mid+1'],['mid-1']],'mid 를 포함한 채 재귀하면 범위가 줄지 않아 종료 조건에 이르지 못한다.','종료 조건 ② 언젠가는 반드시 도달해야 한다.'),
+ TBL('알고리즘이 "일하는 자리"를 쓰시오.',['알고리즘','일하는 자리'],[['병합 정렬','{{합칠|결합}} 때'],['퀵 정렬','{{나눌|분할}} 때'],['이진 탐색','합칠 때 {{할 일이 없다|없다}}']],'병합은 합칠 때, 퀵은 나눌 때, 이진 탐색은 합칠 때 할 일이 없다.'),
+ NUM('원소 10개(정렬됨) 리스트에서 이진 탐색의 최악의 호출 횟수(lo > hi 호출 포함)는?',[['n = 10',bsWorst(10)]],'범위 크기가 10 → 5 → 2 → 1 → 0 처럼 가장 길게 줄어드는 경우 5번이다. (마지막 lo > hi 호출 포함)',null,'없는 값을 찾는 경우도 따져 보세요.')]);
+P2('b4','bs',3,'이진 탐색 작성','재귀 이진 탐색을 직접 쓰고 추적한다.',[
+ COD('A의 lo~hi 구간에서 target의 인덱스를 찾는 재귀 이진 탐색 binary_search_rec(A, target, lo, hi)를 쓰시오. 없으면 -1.',`def binary_search_rec(A, target, lo, hi):
+    if lo > hi:
+        return -1
+    mid = (lo + hi) // 2
+    if A[mid] == target:
+        return mid
+    elif A[mid] < target:
+        return binary_search_rec(A, target, mid + 1, hi)
+    else:
+        return binary_search_rec(A, target, lo, mid - 1)`,[['def'],['lo>hi'],['return-1'],['mid=(lo+hi)//2'],['a[mid]==target'],['mid+1'],['mid-1']],'종료 조건 둘 + 한쪽으로만 재귀.','종료 조건 2개, mid, 두 방향.'),
+ NUM('A = [11, 14, 23, 27, 31, 42, 55, 68, 74, 89] 에서 target 89, target 11 을 찾을 때 호출 횟수는?',[['target 89',bsTrace(BSA,89).length],['target 11',bsTrace(BSA,11).length]],'각 호출의 mid 를 차례로 따라간다.'),
+ ESS('이진 탐색이 분할 정복인 이유를 분할·정복·결합으로 쓰시오.','분할: 가운데 값과 비교해 남은 후보를 왼쪽 반이나 오른쪽 반으로 줄인다. 정복: 찾으면 mid, 후보가 없으면 -1 을 반환한다. 결합: 할 일이 없고 한쪽에서 찾은 답을 그대로 반환한다.',[['분할','반'],['정복','mid','-1'],['결합','그대로','할일']],'세 단계 키워드.')]);
+
+/* ================= ③ 동적 계획법 ================= */
+/* --- 피보나치 (f(1)=f(2)=1) --- */
+P2('f1','fib',1,'피보나치와 중복 계산','f(1) = f(2) = 1, f(n) = f(n-2) + f(n-1) (메모 없는 재귀).',[
+ TBL('피보나치 수 표를 채우시오.',['n','1','2','3','4','5','6','7','8'],[['f(n)','1','1',...[3,4,5,6,7,8].map(n=>`{{${fibVal(n)}}}`)]],'앞의 두 값을 더한다.'),
+ NUM('f(5)를 구할 때 f(3), f(2), f(1)이 각각 몇 번 구해지는가? 그리고 f 의 총 호출 횟수는?',[['f(3)',fibCnt(3,5)],['f(2)',fibCnt(2,5)],['f(1)',fibCnt(1,5)],['총 호출',fibCalls(5)]],'호출 나무: f(5) → f(4), f(3) ...',null,'호출 나무를 직접 그려 보세요.'),
+ ESS('위 방식이 비효율적인 이유를 "똑같은 작은 문제"라는 말을 사용해 쓰시오.','같은 값을 구하는 똑같은 작은 문제(예: f(3), f(2))를 여러 번 반복해서 풀기 때문이다. 이미 푼 문제인데도 처음부터 다시 푼다.',[['똑같','같은'],['여러','반복','다시','중복']],'동적 계획법이 필요한 이유.','f(3)이 몇 번 불렸나요?')]);
+P2('f2','fib',2,'피보나치 호출 횟수와 메모','호출 횟수를 계산하고 메모 코드를 완성한다.',[
+ NUM('f(6)과 f(7)의 호출 횟수, 그리고 f(6)에서 f(3)이 호출되는 횟수는?',[['f(6) 호출',fibCalls(6)],['f(7) 호출',fibCalls(7)],['f(6)에서 f(3)',fibCnt(3,6)]],'호출 횟수 c(n) = 1 + c(n-1) + c(n-2), c(1) = c(2) = 1.'),
+ BLK('하향식 메모 코드의 빈칸을 채우시오.',`memo = {}
+def fib(n):
+    if n <= 2:
+        return {{1}}
+    if n in {{memo}}:
+        return memo[n]
+    memo[n] = fib(n - 1) + fib({{n - 2|n-2}})
+    return {{memo[n]}}`,'기저 → 메모 확인 → 계산·저장 → 반환.'),
+ NUM('메모를 쓴 fib(7)의 호출 횟수(메모 hit와 기저 포함)는?',[['호출 횟수',fibMemoCalls(7)]],'각 값은 한 번만 계산되고 두 번 호출된다.')]);
+P2('f3','fib',2,'피보나치 상향식과 4단계','동적 계획법 설계 네 단계를 피보나치에 적용한다.',[
+ ESS('피보나치를 동적 계획법으로 푸는 설계 네 단계를 쓰시오.','① 작은 문제: dp[i]는 i번째 피보나치 수. ② 점화식: dp[i] = dp[i-1] + dp[i-2]. ③ 기저 사례: dp[1] = dp[2] = 1. ④ 계산 순서: i를 3부터 n까지 작은 것부터 채운다.',[['작은문제','dp[i]','번째'],['점화식','dp[i-1]+dp[i-2]'],['기저','dp[1]','dp[2]'],['순서','작은','3부터']],'네 단계: 작은 문제 → 점화식 → 기저 사례 → 계산 순서.','단계 이름 네 개를 모두 쓰세요.'),
+ BLK('상향식 코드의 빈칸을 채우시오.',`dp = [0] * (n + 1)
+dp[1] = {{1}}
+dp[2] = {{1}}
+for i in range({{3}}, n + 1):
+    dp[i] = dp[{{i-1|i - 1}}] + dp[i - 2]`,'기저 사례를 먼저 적고 그 값으로 다음 칸을 채운다.'),
+ NUM('위 코드에서 n = 9 일 때 dp[9]의 값과 점화식이 실행되는 횟수는?',[['dp[9]',fibVal(9)],['점화식 실행 횟수',7]],'i = 3, 4, …, 9 → 7번.')]);
+P2('f4','fib',3,'피보나치 오류와 비교','상향식 오류와 호출 횟수 비교.',[
+ FIX('n = 1 로 호출하면 IndexError가 난다. 함수 맨 앞에 넣을 줄을 쓰시오.',`def fib(n):
+    dp = [0] * (n + 1)
+    dp[1] = 1
+    dp[2] = 1
+    for i in range(3, n + 1):
+        dp[i] = dp[i-1] + dp[i-2]
+    return dp[n]`,`if n <= 2:
+    return 1`,[['n<=2','n<3'],['return1','return1']],'n = 1 이면 dp 의 길이가 2 라 dp[2] 에 쓸 수 없다. 기저 사례를 먼저 처리한다.','dp[2] = 1 이 실행될 때 dp 의 길이는?'),
+ NUM('n = 8 일 때 메모 없는 재귀의 호출 횟수, 메모 있는 하향식의 호출 횟수, 상향식의 점화식 실행 횟수는?',[['메모 없음',fibCalls(8)],['메모 있음',fibMemoCalls(8)],['상향식',6]],'메모 없는 재귀는 c(8)번, 메모를 쓰면 훨씬 적고, 상향식은 i = 3 ~ 8 의 6번이다.'),
+ TF('"메모를 쓰면 fib(n)의 호출 횟수는 n에 비례해 늘어난다."',true,[['비례','n','선형','칸의수']],'○. 서로 다른 n개의 문제를 각각 한 번씩만 계산하기 때문이다.')]);
+
+/* --- 격자 경로 --- */
+P2('g1','grid',1,'격자 경로 기본','3×3 격자의 왼쪽 위 (0, 0) 에서 오른쪽 아래까지 오른쪽·아래로만 이동한다. P(r, c) = (0, 0) 에서 (r, c) 까지 오는 길의 수.',[
+ TBL('P(r, c) 표의 빈칸을 채우시오.',['','c = 0','c = 1','c = 2'],gP(3,3).map((row,i)=>[`r = ${i}`,...row.map((v,j)=>(i+j>=2)?`{{${v}}}`:String(v))]),'P(r,c) = P(r-1,c) + P(r,c-1), 첫 행·첫 열은 1.'),
+ NUM('P(2, 2)와, 4행 3열 격자의 도착 칸 P(3, 2)는?',[['P(2, 2)',6],['P(3, 2)',gP(4,3)[3][2]]],'위쪽 값과 왼쪽 값을 더해 간다.'),
+ ESS('(쓰기) ① 칸 (r, c) 에 오기 바로 전 칸 ② 점화식 ③ 기저 사례 ④ 첫 행·첫 열이 1인 이유를 쓰시오.','① 위쪽 칸 (r-1, c) 과 왼쪽 칸 (r, c-1). ② P(r, c) = P(r-1, c) + P(r, c-1). ③ 출발 칸 P(0, 0) = 1. ④ 맨 윗줄은 왼쪽에서만, 맨 왼쪽 줄은 위에서만 올 수 있어 길이 한 가지이다.',[['위','r-1'],['p(r,c)=p(r-1,c)+p(r,c-1)','p(r-1,c)+p(r,c-1)'],['p(0,0)=1','출발'],['한가지','1']],'네 가지 모두 써야 해요.')]);
+P2('g2','grid',2,'count_paths 코드','의사 코드 CountPaths를 파이썬으로 옮긴다.',[
+ BLK('count_paths의 빈칸을 채우시오.',`def count_paths(r, c):
+    if r == {{0}} and c == {{0}}:
+        return 1
+    total = 0
+    if r {{>}} 0:
+        total = total + count_paths(r - 1, c)
+    if c > 0:
+        total = total + count_paths(r, {{c - 1|c-1}})
+    return total`,'@@IF r > 0@@ 은 격자 밖으로 나가지 않도록 하는 조건이다.'),
+ TBL('4×4 격자의 P(r, c) 표를 채우시오.',null,tb(gP(4,4),(i,j)=>i>=2&&j>=1),'위 + 왼쪽.'),
+ NUM('count_paths(1, 1)과 count_paths(2, 3)의 반환값은?',[['(1, 1)',gP(2,2)[1][1]],['(2, 3)',gP(3,4)[2][3]]],'표에서 읽는다.')]);
+{const B=minCostTab(costG);
+P2('g3','grid',3,'비용이 적힌 격자','칸마다 비용이 적힌 격자에서 출발 칸에서 도착 칸까지 오른쪽·아래로만 가며 지난 칸의 비용을 모두 더한 값이 가장 작은 길을 찾는다.\ncost = [[3, 1, 4, 8], [2, 9, 1, 5], [6, 5, 3, 2], [7, 4, 8, 1]]',[
+ TBL('길의 수 문제와 가장 적은 비용 문제의 네 단계를 비교해 빈칸을 채우시오.',['단계','길의 수','가장 적은 비용'],[['① 작은 문제','P(r,c) = 오는 길의 수','B(r,c) = 오는 {{가장 적은 비용}}'],['② 점화식','P(r,c) = P(r-1,c) + P(r,c-1)','B(r,c) = cost[r][c] + {{min}}(B(r-1,c), B(r,c-1))'],['③ 기저 사례','P(0,0) = 1','B(0,0) = {{cost[0][0]}}'],['④ 계산 순서','위 줄부터, 왼쪽부터','{{위 줄부터 왼쪽부터|위 줄부터, 왼쪽부터|위줄부터 왼쪽부터}}']],'더하기 대신 위·왼쪽 중 작은 쪽을 고른다.'),
+ TBL('B(r, c) 표의 빈칸을 채우시오. (첫 행과 첫 열은 누적합)',null,tb(B,(i,j)=>i>=1&&j>=1),'B(r,c) = cost[r][c] + min(위, 왼쪽).'),
+ NUM('도착 칸까지의 가장 적은 비용과, B(1, 1)의 값은?',[['도착 칸',B[3][3]],['B(1, 1)',B[1][1]]],'B(3,3) = 15.')])}
+P2('g4','grid',3,'장애물 격자 (응용)','4×4 격자에서 (1, 1) 과 (2, 2) 칸은 막혀 있어 지날 수 없다. 막힌 칸의 값은 0으로 둔다.',[
+ TBL('P(r, c) 표를 채우시오. (X = 막힌 칸)',null,[['1','1','1','1'],['1','X','{{1}}','{{2}}'],['1','{{1}}','X','{{2}}'],['1','{{2}}','{{2}}','{{4}}']],'막힌 칸은 0, 나머지는 위 + 왼쪽.'),
+ NUM('위 격자의 도착 칸까지 길의 수와, 장애물이 없을 때(4×4)의 길의 수는?',[['장애물 있을 때',4],['장애물 없을 때',gP(4,4)[3][3]]],'장애물이 없으면 20.'),
+ ESS('장애물이 있는 격자의 네 단계(작은 문제·점화식·기저 사례·계산 순서)를 쓰시오.','① 작은 문제: P(r, c) = (0, 0) 에서 (r, c) 까지 오는 길의 수. ② 점화식: 막힌 칸이면 0, 아니면 P(r-1, c) + P(r, c-1). ③ 기저 사례: P(0, 0) = 1. ④ 계산 순서: 위 줄부터, 왼쪽부터.',[['작은문제','p(r,c)'],['점화식','p(r-1,c)+p(r,c-1)','막힌','0'],['기저','p(0,0)=1'],['순서','위','왼']],'막힌 칸 처리가 점화식에 들어간다.')]);
+
+/* --- 호출 횟수 --- */
+{const cd=gCalled(6);
+P2('c1','calls',1,'호출 횟수 읽기','6×6 격자에서 count_paths_counted(5, 5)를 호출하고 called 표에 칸마다 호출 횟수를 센다. (길의 수 252, 전체 호출 923)',[
+ TBL('called 표의 일부를 채우시오.',null,cd.slice(0,3).map((row,i)=>row.slice(0,4).map((v,j)=>(i+j>=1&&i+j<=3)?`{{${v}}}`:String(v))),'칸 (r, c) 의 호출 횟수는 그 칸에서 도착 칸까지 가는 길의 수와 같다.'),
+ NUM('출발 칸 (0, 0) 의 호출 횟수와 (1, 1) 의 호출 횟수, 전체 호출 횟수는?',[['(0, 0)',cd[0][0]],['(1, 1)',cd[1][1]],['전체',gCalls(5,5)]],'출발 칸 호출 횟수 = 길의 수 = 252.'),
+ ESS('출발 칸의 호출 횟수가 길의 수와 같은 이유를 쓰시오.','재귀 호출을 따라가면 도착 칸에서 출발 칸까지 거꾸로 길 하나를 그리게 된다. 적어 두지 않고 세는 것은 길을 하나하나 모두 그려 보는 것과 같아서 출발 칸에 도착하는 횟수가 길의 수와 같다.',[['길'],['하나하나','모두','그려'],['거꾸로','도착']],'적어 두지 않고 세면 길을 모두 그려 보는 셈.')])}
+P2('c2','calls',2,'동적 표를 쓸 때의 호출 횟수','6×6 격자에서 하향식(동적 표)은 호출 횟수가 61번이다.',[
+ BLK('61번의 구성을 완성하시오.',`61 = 1 (도착 칸) + {{10}} × 1 (맨 아랫줄과 맨 오른쪽 줄) + {{25}} × {{2}} (나머지 칸)`,'가장자리 칸은 한 번, 안쪽 칸은 두 번 호출된다.'),
+ NUM('3×3 격자에서 동적 표를 쓸 때와 쓰지 않을 때의 호출 횟수는?',[['동적 표 O',gMemoCalls(3,3)],['동적 표 X',gCalls(2,2)]],'안쪽 4칸 × 2 + 가장자리 4칸 × 1 + 도착 칸 1 = 13.'),
+ TF('"동적 표를 쓰면 각 좌표로 함수가 많아야 두 번 호출된다."',true,[['두번','2번','오른쪽','아래']],'○. 오른쪽 칸과 아래 칸의 답을 구할 때 각각 한 번씩 필요하기 때문이다.')]);
+P2('c3','calls',2,'피보나치 호출 횟수 표','c(n) = 1 + c(n-1) + c(n-2), c(1) = c(2) = 1.',[
+ TBL('호출 횟수 표를 채우시오.',['n','1','2','3','4','5','6','7','8'],[['c(n)','1','1',...[3,4,5,6,7,8].map(n=>`{{${fibCalls(n)}}}`)]],'c(n) = 1 + c(n-1) + c(n-2).'),
+ NUM('f(7)을 구할 때 f(2)가 호출되는 횟수와 f(1)이 호출되는 횟수는?',[['f(2)',fibCnt(2,7)],['f(1)',fibCnt(1,7)]],'호출 나무에서 f(k)가 나타나는 횟수.'),
+ TF('"f(n) 호출 횟수는 메모 없이도 n에 비례한다."',false,[['지수','빠르','급격','늘어','배']],'✕. 메모 없이는 호출 횟수가 매우 빠르게 늘어난다. 메모를 쓰면 n에 비례한다.')]);
+P2('c4','calls',3,'격자를 키워 비교하기','격자의 한 변을 키우면서 세 방법을 비교한다.',[
+ TBL('표의 빈칸을 채우시오.',['격자','길의 수','적어 두지 않기 (호출)','하향식 (호출)','상향식 (채운 칸)'],[[ '6×6','252',`{{${gCalls(5,5)}}}`,`{{${gMemoCalls(6,6)}}}`,'{{36}}'],['10×10',gP(10,10)[9][9].toLocaleString('en-US'),`{{${gCalls(9,9).toLocaleString('en-US')}}}`,`{{${gMemoCalls(10,10)}}}`,'{{100}}']],'적어 두지 않으면 길의 수를 따라, 적어 두면 칸의 수를 따라 늘어난다.'),
+ NUM('8×8 격자에서 길의 수, 적어 두지 않을 때 호출 횟수, 하향식 호출 횟수, 상향식 채운 칸 수는?',[['길의 수',gP(8,8)[7][7]],['적어 두지 않기',gCalls(7,7)],['하향식',gMemoCalls(8,8)],['상향식',64]],'상향식은 칸마다 한 번씩 채운다.'),
+ ESS('호출 횟수가 적어 두지 않을 때와 적어 둘 때 무엇을 따라 늘어나는지 쓰고 이유를 설명하시오.','적어 두지 않으면 호출 횟수가 길의 수를 따라 늘어난다. 똑같은 작은 문제를 다시 풀기 때문이다. 동적 표에 적어 두면 각 칸의 답을 한 번만 구하므로 칸의 수를 따라 늘어난다.',[['길의수','길'],['칸의수','칸'],['한번','한 번','다시','적어']],'같은 점화식·기저 사례인데 적어 두었느냐만 다르다.')]);
+
+/* --- 하향식 (메모) --- */
+P2('h1','memo',1,'하향식 동적 계획법 기본','count_paths 에 동적 표 dt 를 추가한 하향식이다.',[
+ ORD('CountPathsMemo의 동작 순서대로 배열하시오.',['dt[r][c]에 답이 있으면 그 값을 바로 반환한다 (추가 ①)','출발 칸이면 답 1 을 dt 에 적고 반환한다 (기저 사례)','위 칸과 왼쪽 칸의 답을 재귀로 구해 더한다','구한 답을 dt[r][c]에 적어 둔다 (추가 ②)','답을 반환한다'],'표 확인 → 기저 사례 → 점화식 → 표에 적기 → 반환.'),
+ BLK('빈칸을 채우시오.',`dt = [[{{None}}] * N for _ in range(N)]   # 동적 표
+
+def count_paths_memo(r, c):
+    if dt[r][c] {{is not None|!= None}}:
+        return dt[r][c]
+    if r == 0 and c == 0:
+        dt[r][c] = 1
+        return dt[r][c]
+    total = 0
+    if r > 0:
+        total = total + count_paths_memo(r - 1, c)
+    if c > 0:
+        total = total + count_paths_memo(r, c - 1)
+    dt[r][c] = {{total}}
+    return total`,'아직 없음은 답으로 나올 수 없는 값(None)으로 둔다.'),
+ TF('"미로 탐색처럼 한 번 간 칸을 seen에 넣고 다시 가지 않도록 막으면 격자의 모든 길을 올바르게 센다."',false,[['1','한','하나'],['막','seen']],'✕. 처음 지나간 길 하나만 세고 나머지 길은 모두 막혀 답이 1이 된다. 동적 표는 막지 않고 이미 구한 답을 꺼내 쓴다.','막기 vs 적어 두기')]);
+P2('h2','memo',2,'하향식 코드 작성','동적 표를 사용하는 하향식을 직접 쓴다.',[
+ COD('N×N 격자에서 동적 표 dt(None 으로 채움)를 사용하는 count_paths_memo(r, c)를 쓰시오.',`def count_paths_memo(r, c):
+    if dt[r][c] is not None:
+        return dt[r][c]
+    if r == 0 and c == 0:
+        dt[r][c] = 1
+        return dt[r][c]
+    total = 0
+    if r > 0:
+        total = total + count_paths_memo(r - 1, c)
+    if c > 0:
+        total = total + count_paths_memo(r, c - 1)
+    dt[r][c] = total
+    return total`,[['def'],['dt[r][c]isnotnone','dt[r][c]!=none'],['dt[r][c]=1','dt[r][c]=1'],['count_paths_memo(r-1,c)'],['count_paths_memo(r,c-1)'],['dt[r][c]=total']],'표 확인 → 기저 → 점화식 → 표에 적기.','추가 ①과 추가 ②를 빠뜨리지 마세요.'),
+ NUM('N = 6 일 때 count_paths_memo(5, 5)의 길의 수와 호출 횟수는?',[['길의 수',gP(6,6)[5][5]],['호출 횟수',gMemoCalls(6,6)]],'적어 두지 않을 때는 923번.'),
+ ESS('"막기"와 "적어 두기"의 차이를 쓰시오.','막기는 한 번 간 칸을 다시 가지 못하게 하므로 길을 하나만 세고 답이 1이 된다. 적어 두기는 다시 방문해도 막지 않고 이미 구한 답을 표에서 꺼내 쓰므로 길은 모두 세면서 계산만 줄어든다.',[['막'],['꺼내','적어','표','저장'],['모두','계산','줄']],'seen vs dt.')]);
+P2('h3','memo',2,'피보나치 하향식','f(n) 을 하향식으로 구한다. (f(1) = f(2) = 1, 기저 n <= 2 는 메모에 저장하지 않는다)',[
+ TBL('fib(5)를 호출했을 때 memo 에 값이 저장되는 순서대로 표를 채우시오.',['저장 순서','key (n)','value'],[['1','3','{{2}}'],['2','4','{{3}}'],['3','5','{{5}}']],'가장 깊은 곳 fib(3) 이 먼저 계산·저장된다. n ≤ 2 는 저장하지 않는다.'),
+ COD('memo 딕셔너리를 사용하는 fib(n)을 처음부터 쓰시오.',`memo = {}
+def fib(n):
+    if n <= 2:
+        return 1
+    if n in memo:
+        return memo[n]
+    memo[n] = fib(n - 1) + fib(n - 2)
+    return memo[n]`,[['memo'],['n<=2'],['returnmemo[n]'],['memo[n]=fib(n-1)+fib(n-2)']],'기저 → 메모 확인 → 계산·저장 → 반환.','순서를 기억하세요.'),
+ TF('"하향식에서는 계산 순서를 반복문으로 직접 정해야 한다."',false,[['재귀','자동','알아서']],'✕. 하향식은 재귀 호출이 필요한 작은 문제의 답부터 구하므로 순서가 저절로 정해진다.')]);
+P2('h4','memo',3,'하향식 오류와 서술','동적 표 코드의 오류를 찾는다.',[
+ FIX('동적 표를 쓰는데도 6×6 의 호출 횟수가 923번이다. 빠진 줄을 쓰시오.',`def count_paths_memo(r, c):
+    if dt[r][c] is not None:
+        return dt[r][c]
+    if r == 0 and c == 0:
+        return 1
+    total = 0
+    if r > 0:
+        total = total + count_paths_memo(r - 1, c)
+    if c > 0:
+        total = total + count_paths_memo(r, c - 1)
+    return total`,`(기저 사례) dt[r][c] = 1 를 적고 반환
+(마지막) dt[r][c] = total 를 적고 반환`,[['dt[r][c]=total'],['dt[r][c]=1','기저']],'계산한 답을 표에 적는 추가 ②가 없으면 표에는 아무것도 저장되지 않는다.','표에 저장하는 줄이 있나요?'),
+ ESS('동적 표의 "아직 없음"은 어떤 값이어야 하는지 쓰고 파이썬에서 쓰는 값을 쓰시오.','답으로 나올 수 없는 값이어야 한다. 파이썬에서는 None 을 쓴다.',[['답으로','나올수없','나올 수 없'],['none']],'0 이 답이 될 수 있으면 0 으로 표시하면 혼동된다.'),
+ NUM('동적 표 코드에서 6×6 을 구할 때, 같은 칸의 답을 구하는 계산이 일어나는 횟수(각 칸당)와 전체 호출 횟수는?',[['각 칸의 답 계산 횟수',1],['전체 호출',gMemoCalls(6,6)]],'각 칸의 답은 한 번만 구한다.')]);
+
+/* --- 상향식 (표 채우기) --- */
+P2('u1','bu',1,'상향식 기본','반복문으로 작은 문제부터 동적 표를 채운다.',[
+ ORD('상향식 CountPathsTable의 동작 순서대로 배열하시오.',['N × N 동적 표를 만든다','위 줄부터 한 줄씩 훑는다 (r 반복)','한 줄 안에서 왼쪽부터 훑는다 (c 반복)','출발 칸이면 1, 아니면 위 칸과 왼쪽 칸의 값을 더해 적는다','dt[N-1][N-1] 을 반환한다'],'계산 순서: 위 줄부터, 왼쪽부터.'),
+ TBL('4×4 상향식 표의 빈칸을 채우시오.',null,tb(gP(4,4),(i,j)=>i>=1&&j>=1),'위 칸과 왼쪽 칸이 먼저 채워져 있다.'),
+ BLK('빈칸을 채우시오.',`dt = [[0] * N for _ in range(N)]
+for r in range({{N}}):                 # 위 줄부터
+    for c in range(N):             # 왼쪽부터
+        if r == 0 and c == 0:
+            dt[r][c] = {{1}}
+        else:
+            dt[r][c] = 0
+            if r > 0:
+                dt[r][c] = dt[r][c] + dt[{{r-1|r - 1}}][c]
+            if c > 0:
+                dt[r][c] = dt[r][c] + dt[r][{{c-1|c - 1}}]`,'기저 사례를 먼저 적고 다른 칸을 채운다.')]);
+P2('u2','bu',2,'계산 순서가 틀리면','바깥 반복문을 아래 줄부터 돌린다. (for r in range(N - 1, -1, -1), N = 4, 표는 0으로 새로 만든다)',[
+ TBL('실행 후 dt 의 모습을 쓰시오.',null,[['1','1','1','1'],['{{0}}','{{0}}','{{0}}','{{0}}'],['0','0','0','0'],['0','0','0','0']],'아래 줄의 칸을 채울 때 읽는 위 칸은 아직 처음 넣은 0 그대로이다.'),
+ NUM('이때 도착 칸 dt[3][3]의 값(길의 수)은? 올바른 값은?',[['잘못된 순서의 값',0],['올바른 값',gP(4,4)[3][3]]],'위 칸을 아직 계산하지 않아 0을 읽는다.'),
+ ESS('왜 이런 결과가 나오는지 "아직 계산하지 않은 어느 칸의 값"이라는 표현을 사용해 쓰시오.','아래 줄부터 채우면 dt[r][c]를 채울 때 읽는 위 칸 dt[r-1][c]가 아직 계산되지 않아 처음 넣은 0 그대로이기 때문이다. 그래서 맨 윗줄만 1이고 나머지는 0이 된다.',[['위','dt[r-1][c]','r-1'],['아직','계산'],['0','맨윗줄','1']],'계산 순서도 설계의 일부.')]);
+P2('u3','bu',2,'하향식과 상향식 비교','하향식과 상향식을 비교한다.',[
+ TBL('표의 빈칸을 채우시오.',['','하향식','상향식'],[['어디서 시작하나','{{도착 칸}}의 답을 구하는 데 필요한 문제를 재귀로','{{출발 칸}}부터 표를 채워 올라간다'],['무엇으로 짜나','{{재귀}} + 동적 표','{{반복문}} + 동적 표'],['계산 순서','재귀 호출이 정한다','{{우리가 정한다|직접 정한다}}'],['채우는 칸','{{필요한 칸만}}','{{표 전체}}']],'방향·구현·순서·채우는 칸을 비교.'),
+ NUM('N = 8 격자에서 상향식이 채우는 칸의 수와, 하향식의 호출 횟수는?',[['상향식 채운 칸',64],['하향식 호출',gMemoCalls(8,8)]],'상향식은 N×N 칸 모두.'),
+ TF('"하향식과 상향식이 만든 동적 표는 같다."',true,[['같','p(r,c)']],'○. 출력된 표의 칸마다 적힌 수가 P(r, c) 로 같다.')]);
+P2('u4','bu',3,'상향식 작성과 오류','상향식 코드를 쓰고 고친다.',[
+ COD('cost 격자에서 (0, 0)에서 오른쪽·아래로만 이동할 때 최소 비용을 상향식으로 구하는 min_cost(cost)를 쓰시오. (N×N 격자)',`def min_cost(cost):
+    N = len(cost)
+    B = [[0] * N for _ in range(N)]
+    for r in range(N):
+        for c in range(N):
+            if r == 0 and c == 0:
+                B[r][c] = cost[0][0]
+            elif r == 0:
+                B[r][c] = B[r][c-1] + cost[r][c]
+            elif c == 0:
+                B[r][c] = B[r-1][c] + cost[r][c]
+            else:
+                B[r][c] = min(B[r-1][c], B[r][c-1]) + cost[r][c]
+    return B[N-1][N-1]`,[['def'],['min('],['cost[r][c]'],['b[r-1][c]'],['b[r][c-1]'],['returnb[n-1][n-1]']],'위 칸과 왼쪽 칸 중 작은 값 + 현재 비용.','네 단계를 코드로.'),
+ FIX('상향식 피보나치에서 dp[n]이 0으로 나온다. 반복문의 첫 줄을 고쳐 쓰시오.',`dp = [0, 1, 1, 0, 0, 0, 0]    # n = 6
+for i in range(6, 2, -1):
+    dp[i] = dp[i-1] + dp[i-2]`,'for i in range(3, n + 1):',[['range(3,'],['n+1','7']],'큰 i부터 계산하면 아직 채워지지 않은 값을 읽는다. 작은 i부터.','어느 방향으로 채워야 앞의 값이 먼저 채워질까요?'),
+ ESS('상향식에서 "계산 순서도 설계의 일부"라고 하는 이유를 쓰시오.','한 칸을 채우려면 필요한 작은 문제의 답(위 칸, 왼쪽 칸)이 먼저 채워져 있어야 한다. 순서를 잘못 정하면 아직 채우지 않은 칸을 읽어 틀린 답이 나온다.',[['먼저','앞서'],['채워','계산'],['잘못','틀린','읽']],'네 단계 중 ④.')]);
+
+/* --- DC vs DP 비교 --- */
+P2('k1','cmp',1,'분할 정복 vs 동적 계획법','두 방법을 표로 비교한다.',[
+ TBL('표의 빈칸을 채우시오.',['','분할 정복','동적 계획법'],[['작은 문제의 답으로 큰 문제를 푼다','그렇다','그렇다'],['오늘 본 예에서','안경 세기: 학년마다 {{다른}} 학생','격자: {{똑같은}} 칸의 답이 여러 곳에서 필요'],['작은 문제의 답','구한 {{자리에서|자리}} 쓴다','{{동적 표|표}}에 적어 두고 꺼내 쓴다'],['예','병합 정렬, 이진 탐색, 안경 세기','{{격자|피보나치}}의 길 세기']],'다른 학생 vs 똑같은 칸.'),
+ NUM('f(5)를 메모 없이 구할 때 호출 횟수, 메모를 쓴 호출 횟수, 상향식의 점화식 실행 횟수는?',[['메모 없음',fibCalls(5)],['메모 있음',fibMemoCalls(5)],['상향식',3]],'상향식은 i = 3, 4, 5.'),
+ TF('"분할 정복에서 나눈 작은 문제들은 서로 똑같은 문제여서 답을 적어 두면 계산이 줄어든다."',false,[['다른','같은종류','다르'],['동적','적어']],'✕. 분할 정복의 작은 문제는 같은 종류지만 다른 대상을 다룬다. 똑같은 문제가 여러 곳에서 필요한 쪽이 동적 계획법이다.')]);
+P2('k2','cmp',2,'같은 종류 vs 똑같은','"같은 종류"의 작은 문제와 "똑같은" 작은 문제를 구분한다.',[
+ TBL('표를 완성하시오.',['','뜻','예'],[['같은 종류의 작은 문제 (분할 정복)','구하는 것이 {{같다}}, 다루는 대상은 {{다르다}}','1학년 세기와 2학년 세기'],['똑같은 작은 문제 (동적 계획법)','구하는 것도, 다루는 {{대상}}도 같다','{{f(2)|피보나치}} 를 여러 번 구하는 것']],'대상까지 같으면 똑같은 문제.'),
+ ESS('동적 계획법이 이용하는 두 가지 성질을 쓰시오.','① 작은 문제의 답으로 큰 문제의 답을 만들 수 있다. ② 똑같은 작은 문제의 답이 여러 곳에서 필요하다.',[['작은문제의답','큰문제'],['똑같','여러곳','여러 곳']],'성질 ①은 분할 정복에서도 쓴다.'),
+ TF('"똑같은 작은 문제의 답이 여러 곳에서 필요하지 않으면, 답을 적어 두어도 계산이 줄지 않는다."',true,[['꺼낼','줄지','재사용','다시']],'○. 적어 둔 답을 다시 꺼낼 일이 없기 때문이다.')]);
+P2('k3','cmp',2,'분류와 2ⁿ 의 연결','문제를 분류하고 2ⁿ 을 DP와 연결한다.',[
+ TBL('각 문제가 분할 정복(DC)인지 동적 계획법(DP)인지 쓰시오.',['문제','DC / DP'],[['병합 정렬','{{DC}}'],['이진 탐색','{{DC}}'],['안경 쓴 학생 세기','{{DC}}'],['격자의 길 세기','{{DP}}'],['피보나치 수 (메모)','{{DP}}']],'겹치는 부분 문제가 있으면 DP.'),
+ ESS('2ⁿ 을 구하는 ③ 방법(power_half)은 한 번 구한 값을 다시 쓴다. 이때 표 대신 변수 하나에 저장하는 것으로 충분한 이유를 쓰시오.','한 번 구한 값을 바로 제곱하면 되고 그 답이 필요한 곳이 한 곳뿐이기 때문이다. 격자처럼 똑같은 작은 문제의 답이 여러 곳에서 여러 번 필요할 때는 표에 차례대로 적어 두어야 한다.',[['바로','제곱','한번','한 번'],['여러','한곳','표']],'답이 필요한 곳이 하나면 변수 하나로 충분.'),
+ TF('"작은 문제의 답을 한 번 구해 다시 쓴다는 사실만으로 동적 계획법이라고 부른다."',false,[['표','여러곳','여러 곳','적어']],'✕. 여러 곳에서 필요한 작은 문제의 답을 표에 적어 두고 그 답으로 더 큰 문제의 답을 구해 반복 계산을 줄였을 때 동적 계획법이라고 한다.')]);
+P2('k4','cmp',3,'외판원과 격자','같은 네 단계를 다른 문제에 적용한다. (도시 0에서 출발해 모든 도시를 한 번씩 들르고 돌아오는 최단 거리)',[
+ NUM('나머지 도시를 도는 순서의 수를 도시 4개, 10개, 11개일 때 쓰시오.',[['도시 4개',6],['도시 10개',362880],['도시 11개',3628800]],'(n-1)! 가지. 4개: 3! = 6, 10개: 9!, 11개: 10!.'),
+ TBL('격자와 외판원의 동적 표를 비교하시오.',['','격자','외판원'],[['동적 표의 칸','(r, c)','(S, now) — {{들른 도시들|들른 도시}}, {{지금 도시|지금 있는 도시}}'],['점화식','위 칸과 왼쪽 칸을 {{더한다}}','남은 도시마다 그 도시까지의 거리 + 남은 가장 짧은 거리 중 {{가장 작은 것|최솟값|min}}'],['기저 사례','출발 칸이면 1','다 들렀으면 {{0으로 돌아가는 거리|0 으로 돌아가는 거리}}'],['코드 모양','표를 본다 → 기저 → 점화식 → 표에 적는다','{{같다}}']],'작은 문제·점화식·기저 사례는 바뀌었지만 코드의 기본 흐름은 같다.'),
+ ESS('외판원 문제에서 작은 문제를 정할 때 "지금 있는 도시"만으로는 부족한 이유를 쓰시오.','지금 있는 도시가 같아도 이미 들른 도시가 다르면 앞으로 들러야 할 도시가 달라지므로 남은 길이 달라진다. 그래서 지금 있는 도시와 이미 들른 도시들을 함께 알아야 한다.',[['들른'],['지금','있는 도시'],['남은','앞으로','달라']],'표의 칸은 (S, now).','가: 0→1→3, 나: 0→2→3 을 비교해 보세요.')]);
+
+/* ---------- 따라쓰기 ---------- */
+const SNIP=[
+ {id:'dc3',k:'text',g:'dc',n:'분할 정복 세 단계',s:`분할: 문제를 같은 종류의 작은 문제로 나눈다.
+정복: 작은 문제를 푼다. 바로 풀리는 크기가 되면 직접 푼다.
+결합: 작은 문제의 답을 모아 한 단계 위 문제의 답을 만든다.`},
+ {id:'sub2',k:'text',g:'dc',n:'작은 문제의 두 조건',s:`작은 문제의 조건: ① 구하려는 답의 성질이 원래 문제와 같다. ② 다루는 대상이 원래 문제 대상의 일부이다.`},
+ {id:'term2',k:'text',g:'dc',n:'종료 조건 두 가지',s:`종료 조건: ① 더 나누지 않고 답을 바로 반환한다.
+② 계속 나누면 언젠가는 반드시 종료 조건에 이른다.`},
+ {id:'cg',k:'code',g:'dc',n:'count_glasses',s:CGCODE},
+ {id:'iss',k:'code',g:'dc',n:'is_sorted',s:`def is_sorted(A, lo, hi):
+    if lo == hi:
+        return True
+    mid = (lo + hi) // 2
+    left = is_sorted(A, lo, mid)
+    right = is_sorted(A, mid + 1, hi)
+    return left and right and A[mid] <= A[mid + 1]`},
+ {id:'p1',k:'code',g:'dc',n:'power_one (①)',s:`def power_one(n):
+    if n == 0:
+        return 1, 0
+    value, c = power_one(n - 1)
+    return 2 * value, c + 1`},
+ {id:'p2',k:'code',g:'dc',n:'power_both (②)',s:`def power_both(n):
+    if n == 0:
+        return 1, 0
+    if n == 1:
+        return 2, 0
+    a, c1 = power_both(n // 2)
+    b, c2 = power_both(n - n // 2)
+    return a * b, c1 + c2 + 1`},
+ {id:'p3',k:'code',g:'dc',n:'power_half (③)',s:`def power_half(n):
+    if n == 0:
+        return 1, 0
+    half, c = power_half(n // 2)
+    result = half * half
+    c += 1
+    if n % 2 == 1:
+        result = result * 2
+        c += 1
+    return result, c`},
+ {id:'bsr',k:'code',g:'dc',n:'binary_search_rec',s:`def binary_search_rec(A, target, lo, hi):
+    if lo > hi:
+        return -1
+    mid = (lo + hi) // 2
+    if A[mid] == target:
+        return mid
+    elif A[mid] < target:
+        return binary_search_rec(A, target, mid + 1, hi)
+    else:
+        return binary_search_rec(A, target, lo, mid - 1)`},
+ {id:'ms',k:'code',g:'dc',n:'병합 정렬',s:`def merge_sort(a):
+    if len(a) <= 1:
+        return a
+    mid = len(a) // 2
+    left = merge_sort(a[:mid])
+    right = merge_sort(a[mid:])
+    return merge(left, right)`},
+ {id:'mg',k:'code',g:'dc',n:'merge',s:`def merge(l, r):
+    res, i, j = [], 0, 0
+    while i < len(l) and j < len(r):
+        if l[i] <= r[j]:
+            res.append(l[i]); i += 1
+        else:
+            res.append(r[j]); j += 1
+    return res + l[i:] + r[j:]`},
+ {id:'fmax',k:'code',g:'dc',n:'find_max',s:`def find_max(A, lo, hi):
+    if lo == hi:
+        return A[lo]
+    mid = (lo + hi) // 2
+    left = find_max(A, lo, mid)
+    right = find_max(A, mid + 1, hi)
+    return max(left, right)`},
+ {id:'dp4',k:'text',g:'dp',n:'동적 계획법 네 단계',s:`① 작은 문제 정하기: 표의 한 칸에 무엇을 적을지 정한다.
+② 점화식 세우기: 큰 문제의 답을 작은 문제의 답으로 나타낸다.
+③ 기저 사례 정하기: 답을 바로 아는 경우와 그 답을 정한다.
+④ 계산 순서 정하기: 필요한 작은 문제의 답이 먼저 구해지도록 정한다.`},
+ {id:'dpdef',k:'text',g:'dp',n:'동적 계획법이란',s:`동적 계획법은 작은 문제의 답을 표에 적어 두고, 그 답을 이용해 더 큰 문제의 답을 구하는 방법이다.`},
+ {id:'cp',k:'code',g:'dp',n:'count_paths',s:`def count_paths(r, c):
+    if r == 0 and c == 0:
+        return 1
+    total = 0
+    if r > 0:
+        total = total + count_paths(r - 1, c)
+    if c > 0:
+        total = total + count_paths(r, c - 1)
+    return total`},
+ {id:'cpm',k:'code',g:'dp',n:'count_paths_memo (하향식)',s:`def count_paths_memo(r, c):
+    global calls
+    calls = calls + 1
+    if dt[r][c] is not None:
+        return dt[r][c]
+    if r == 0 and c == 0:
+        dt[r][c] = 1
+        return dt[r][c]
+    total = 0
+    if r > 0:
+        total = total + count_paths_memo(r - 1, c)
+    if c > 0:
+        total = total + count_paths_memo(r, c - 1)
+    dt[r][c] = total
+    return total`},
+ {id:'cpt',k:'code',g:'dp',n:'상향식 표 채우기',s:`N = 6
+dt = [[0] * N for _ in range(N)]
+for r in range(N):
+    for c in range(N):
+        if r == 0 and c == 0:
+            dt[r][c] = 1
+        else:
+            dt[r][c] = 0
+            if r > 0:
+                dt[r][c] = dt[r][c] + dt[r-1][c]
+            if c > 0:
+                dt[r][c] = dt[r][c] + dt[r][c-1]`},
+ {id:'fbm',k:'code',g:'dp',n:'피보나치 (하향식 메모)',s:`memo = {}
+def fib(n):
+    if n <= 2:
+        return 1
+    if n in memo:
+        return memo[n]
+    memo[n] = fib(n - 1) + fib(n - 2)
+    return memo[n]`},
+ {id:'fbb',k:'code',g:'dp',n:'피보나치 (상향식)',s:`def fib(n):
+    if n <= 2:
+        return 1
+    dp = [0] * (n + 1)
+    dp[1] = 1
+    dp[2] = 1
+    for i in range(3, n + 1):
+        dp[i] = dp[i-1] + dp[i-2]
+    return dp[n]`}
+];
+/* ---------- 상태 ---------- */
+const ANS={},INP={},GR={},CHK={},HNT={},MSG={},ORDSH={};
+let view='home',studyU='dc',sTab='read',rangeSel='all',starSel=0,unitF='dc',topic=null,pset=null,ex=null,timerId=null,HL=false,exU='dc',exT=25,czOnly=false;
+let cpSel=null,cpMode='see',cpChecked=false;const CPT={},CZ={};
+const KL={num:'단답',blank:'빈칸 채우기',table:'표 채우기',tf:'○✕ 판단',essay:'서술',code:'코드 작성',fix:'오류 수정',order:'순서 배열'};
+const FUZ=k=>k==='essay'||k==='code'||k==='fix'||k==='tf';
+const stars=n=>'★'.repeat(n)+'☆'.repeat(3-n);
+const LVN=['전체','기본','실전','고난도'];
+const tname=id=>TOPICS.find(t=>t.id===id);
+const probsOf=t=>PR.filter(p=>p.t===t);
+const done=p=>{const g=store.pg[p.id];return g&&g.length===3&&g.every(x=>x===1)};
+const topicPct=t=>{const ps=probsOf(t);return Math.round(100*ps.filter(done).length/ps.length)};
+const unitPct=u=>{const ts=TOPICS.filter(t=>t.u===u);return Math.round(ts.reduce((a,t)=>a+topicPct(t.id),0)/ts.length)};
+
+/* ---------- 채점 도구 ---------- */
+function norm(s){return String(s==null?'':s).toLowerCase().replace(/[\s‘’“”'"]+/g,'').replace(/＝/g,'=')}
+function nz(s){return norm(s).replace(/[\[\]]/g,'').replace(/,/g,'').replace(/(번|개|회)$/,'')}
+function eqAns(user,ans){return ans.split('|').some(a=>nz(a)===nz(user))}
+function autoCheck(part,text){
+  const n=norm(text);if(!n)return null;const ok=part.ok||[];
+  return ok.every(g=>g.some(nd=>nd.startsWith('re:')?new RegExp(nd.slice(3)).test(n):n.includes(norm(nd))));
+}
+function parseBlanks(code){
+  const segs=[];let last=0;const re=/\{\{(.+?)\}\}/g;let m;
+  while((m=re.exec(code))){segs.push({t:'t',v:code.slice(last,m.index)});segs.push({t:'b',a:m[1]});last=re.lastIndex}
+  segs.push({t:'t',v:code.slice(last)});return segs;
+}
+function blanksOf(pt){
+  if(pt.k==='num')return pt.fields.map(f=>f[1]);
+  if(pt.k==='blank')return parseBlanks(pt.code).filter(s=>s.t==='b').map(s=>s.a);
+  if(pt.k==='table'){const o=[];pt.rows.forEach(r=>r.forEach(c=>parseBlanks(c).forEach(s=>{if(s.t==='b')o.push(s.a)})));return o}
+  return [];
+}
+function autoGrade(pt,key){
+  const A=ANS[key]||'',I=INP[key]||[];
+  if(pt.k==='num'||pt.k==='blank'||pt.k==='table')return blanksOf(pt).every((a,i)=>eqAns(I[i]||'',a));
+  if(pt.k==='order')return I.length===pt.steps.length&&I.every((v,i)=>v===i);
+  if(pt.k==='tf')return I[0]===(pt.ans?'O':'X')&&autoCheck(pt,A)===true;
+  return autoCheck(pt,A)===true;
+}
+function hilite(text,groups){
+  const idx=[],ch=[];
+  for(let i=0;i<text.length;i++){const c=text[i];if(/[\s‘’“”'"]/.test(c))continue;ch.push(c.toLowerCase());idx.push(i)}
+  const nt=ch.join(''),rng=[],miss=[];
+  (groups||[]).forEach(g=>{
+    let hit=false;
+    g.forEach(nd=>{
+      if(nd.startsWith('re:')){const m=new RegExp(nd.slice(3)).exec(nt);if(m){hit=true;const st=m.index+m[1].length,len=m[0].length-m[1].length-(m[2]||'').length;if(len>0)rng.push([idx[st],idx[st+len-1]+1])}}
+      else{const q=norm(nd);if(!q)return;const p=nt.indexOf(q);if(p>=0){hit=true;rng.push([idx[p],idx[p+q.length-1]+1])}}
+    });
+    if(!hit)miss.push(g[0].startsWith('re:')?g[0].replace(/^re:.*\]\)?/,'').replace(/\D/g,'')||'숫자':g[0]);
+  });
+  rng.sort((a,b)=>a[0]-b[0]);const merged=[];
+  rng.forEach(r=>{const l=merged[merged.length-1];if(l&&r[0]<=l[1])l[1]=Math.max(l[1],r[1]);else merged.push(r.slice())});
+  let h='',p=0;merged.forEach(r=>{h+=esc(text.slice(p,r[0]))+'<mark class="ink">'+esc(text.slice(r[0],r[1]))+'</mark>';p=r[1]});
+  return {html:h+esc(text.slice(p)),miss};
+}
+function modelText(pt){
+  switch(pt.k){
+    case 'num':return pt.fields.map(f=>f[0]+': '+f[1].split('|')[0]).join('\n');
+    case 'blank':return parseBlanks(pt.code).map(s=>s.t==='t'?s.v:s.a.split('|')[0]).join('');
+    case 'table':return (pt.head?pt.head.join(' | ')+'\n':'')+pt.rows.map(r=>r.map(c=>c.replace(/\{\{(.+?)\}\}/g,(m,a)=>a.split('|')[0])).join(' | ')).join('\n');
+    case 'tf':return (pt.ans?'○ 맞다':'✕ 틀리다')+' — '+pt.a;
+    case 'order':return pt.steps.map((s,i)=>(i+1)+'. '+s).join('\n');
+    default:return pt.a;
+  }
+}
+function ansText(key,pt){
+  if(pt.k==='order'){const I=INP[key]||[];return I.map(i=>pt.steps[i]).join(' → ')}
+  if(pt.k==='tf')return ((INP[key]||[])[0]||'?')+' '+(ANS[key]||'');
+  if(FUZ(pt.k)||pt.k==='essay')return ANS[key]||'';
+  return (INP[key]||[]).join(' / ');
+}
+
+/* ---------- 문제 렌더 ---------- */
+function fieldIn(key,i,ans,res,dis){
+  const v=(INP[key]||[])[i]||'';const st=res?(eqAns(v,ans)?1:2):0;
+  const w=Math.min(26,Math.max(4,ans.split('|')[0].length+2));
+  return `<input class="fin${st===1?' ok':st===2?' bad':''}" data-key="${key}" data-i="${i}" value="${esc(v)}" size="${w}" autocomplete="off" spellcheck="false" autocapitalize="off" ${dis?'disabled':''}>`+(st===2?`<span class="fx">${esc(ans.split('|')[0])}</span>`:'');
+}
+function partHTML(ctx,p,i,mode){
+  const key=ctx+'|'+p.id+'|'+i,pt=p.parts[i],k=pt.k;
+  const res=mode==='review'||!!CHK[key],dis=mode==='review';
+  INP[key]=INP[key]||[];
+  let h=`<div class="q"><div class="qh"><span class="qn">${i+1}</span><span class="kd">${KL[k]}</span>${esc(pt.q)}</div>`;
+  if(pt.code&&k!=='blank')h+=`<pre>${esc(pt.code)}</pre>`;
+  let bi=0;
+  if(k==='num'){
+    h+=`<div class="fields">${pt.fields.map((f,j)=>`<label><span>${esc(f[0])}</span>${fieldIn(key,j,f[1],res,dis)}</label>`).join('')}</div>`;
+  }else if(k==='blank'){
+    h+=`<pre class="blankcode">${parseBlanks(pt.code).map(s=>s.t==='t'?esc(s.v):fieldIn(key,bi++,s.a,res,dis)).join('')}</pre>`;
+  }else if(k==='table'){
+    const cell=(c,tag)=>`<${tag}>${parseBlanks(c).map(s=>s.t==='t'?esc(s.v):fieldIn(key,bi++,s.a,res,dis)).join('')}</${tag}>`;
+    h+=`<div class="tw"><table>${pt.head?`<tr>${pt.head.map(c=>`<th>${esc(c)}</th>`).join('')}</tr>`:''}${pt.rows.map(r=>`<tr>${r.map(c=>cell(c,'td')).join('')}</tr>`).join('')}</table></div>`;
+  }else if(k==='tf'){
+    const c=INP[key][0];
+    h+=`<div class="row">${['O','X'].map(v=>`<button class="chip" style="font-size:16px;padding:4px 20px" data-act="tf" data-key="${key}" data-v="${v}" aria-pressed="${c===v}" ${dis?'disabled':''}>${v==='O'?'○ 맞다':'✕ 틀리다'}</button>`).join('')}${res&&c?`<span class="tag ${c===(pt.ans?'O':'X')?'ok':'bad'}">${c===(pt.ans?'O':'X')?'판단 정답':'판단 오답'}</span>`:''}</div>
+    <textarea data-key="${key}" rows="3" style="min-height:80px" spellcheck="false" placeholder="이유를 직접 써 보세요" ${dis?'disabled':''}>${esc(ANS[key]||'')}</textarea>`;
+  }else if(k==='order'){
+    if(!ORDSH[key]){let a=pt.steps.map((_,j)=>j);do{a.sort(()=>Math.random()-.5)}while(a.every((v,j)=>v===j));ORDSH[key]=a}
+    const I=INP[key];
+    h+=`<div class="ord"><div class="mute">보기를 순서대로 눌러 배열하세요.</div>${I.map((o,j)=>`<div class="picked${res?(o===j?' ok':' bad'):''}"><b>${j+1}.</b> ${esc(pt.steps[o])}</div>`).join('')}
+    ${res?'':ORDSH[key].filter(o=>!I.includes(o)).map(o=>`<button data-act="ord" data-key="${key}" data-o="${o}">${esc(pt.steps[o])}</button>`).join('')}</div>
+    ${res||dis?'':`<div class="row"><button class="chip" data-act="ordundo" data-key="${key}">↩ 되돌리기</button><button class="chip" data-act="ordreset" data-key="${key}">초기화</button></div>`}`;
+  }else{
+    const ph=k==='code'?'파이썬 코드를 직접 타이핑하세요 (Tab = 들여쓰기)':k==='fix'?'고친 코드를 직접 쓰세요':'답안을 직접 써 보세요';
+    h+=`<textarea data-key="${key}" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="${ph}" ${dis?'disabled':''}>${esc(ANS[key]||'')}</textarea>`;
+  }
+  /* 액션 */
+  if(mode==='edit'){
+    const hint=pt.hint||(FUZ(k)&&pt.ok&&pt.ok.length?`핵심어 ${pt.ok.length}묶음이 모두 들어가야 해요. 정의·조건·이유를 빠짐없이 써 보세요.`:'');
+    h+=`<div class="row">`;
+    if(!res){
+      if(hint)h+=`<button class="chip" data-act="hint" data-key="${key}">💡 힌트</button>`;
+      h+=`<button class="btn" data-act="check" data-key="${key}">채점하기</button>`;
+    }else h+=`<button class="btn g" data-act="retry" data-key="${key}">✏️ 다시 풀기</button>`;
+    h+=`</div>`;
+    if(HNT[key]&&!res)h+=`<div class="mute">💡 ${esc(hint)}</div>`;
+    if(MSG[key])h+=`<div class="msg">${esc(MSG[key])}</div>`;
+  }
+  /* 피드백 */
+  if(res){
+    const ok=autoGrade(pt,key);
+    if(pt.k==='num'||pt.k==='blank'||pt.k==='table'){
+      const bl=blanksOf(pt),I=INP[key];const n=bl.filter((a,j)=>eqAns(I[j]||'',a)).length;
+      h+=`<div class="row"><span class="tag ${n===bl.length?'ok':'bad'}">${n} / ${bl.length} 정답</span></div>`;
+      h+=`<div class="mute">💡 ${esc(pt.exp)}</div>`;
+    }else if(k==='order'){
+      h+=`<div class="ans"><div class="row sp"><b>${ok?'정답 순서예요!':'정답 순서'}</b><span class="tag ${ok?'ok':'bad'}">${ok?'정답':'오답'}</span></div><pre>${esc(modelText(pt))}</pre><div class="mute">💡 ${esc(pt.exp)}</div></div>`;
+    }else{
+      const A=ANS[key]||'';const hl=hilite(A,pt.ok);const ac=autoCheck(pt,A);
+      h+=`<div class="mute">내 답안 (노란 형광펜 = 맞게 쓴 핵심어)</div><div class="mine">${A.trim()?hl.html:'(작성 안 함)'}</div>`;
+      if(hl.miss.length)h+=`<div>${hl.miss.map(m=>`<span class="miss">빠진 개념: ${esc(m)}</span>`).join('')}</div>`;
+      h+=`<div class="ans"><div class="row sp"><b>모범 답안</b><span class="tag ${ac===true?'ok':ac===false?'bad':''}">${ac===true?'자동 판정: 핵심어 모두 포함':ac===false?'자동 판정: 핵심어 부족':'답안 없음'}</span></div><pre>${esc(modelText(pt))}</pre><div class="mute">💡 ${esc(pt.exp)}</div></div>`;
+    }
+    const g=GR[key];
+    if(FUZ(k)||mode==='review'){
+      h+=`<div class="row"><span class="mute">내 채점:</span><button class="btn k" data-act="grade" data-key="${key}" data-v="1" ${g===1?'style="outline:3px solid var(--ok)"':''}>○ 맞았어요</button><button class="btn r" data-act="grade" data-key="${key}" data-v="0" ${g===0?'style="outline:3px solid var(--bad)"':''}>✕ 틀렸어요</button></div>`;
+    }
+  }
+  return h+`</div>`;
+}
+function probHTML(ctx,p,mode,label){
+  return `<div class="card"><div class="row sp"><h3>${label||''} ${esc(p.title)}</h3><span class="row"><span class="tag">${stars(p.lv)} ${LVN[p.lv]}</span><span class="tag">${tname(p.t).e} ${esc(tname(p.t).n)}</span></span></div><p class="intro">${esc(p.intro)}</p><div class="qs">${p.parts.map((_,i)=>partHTML(ctx,p,i,mode)).join('')}</div></div>`;
+}
+function setGrade(key,v){
+  GR[key]=v;const [ctx,pid,i]=key.split('|');const p=PR.find(x=>x.id===pid);
+  const g=store.pg[pid]||[null,null,null];g[+i]=v;store.pg[pid]=g;
+  const wk=pid+':'+i;
+  if(v===0)store.wrong[wk]={t:Date.now(),a:ansText(key,p.parts[+i])};else delete store.wrong[wk];
+  if(ctx==='ex'&&ex&&ex.hid!=null&&store.hist[ex.hid])store.hist[ex.hid].score=exScore();
+  save();
+}
+
+
+/* ====== 화면 ====== */
+const CIR='①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳',cir=n=>CIR[n]||'('+(n+1)+')',KO='ㄱㄴㄷㄹㅁㅂㅅㅇ';
+const UN={dc:'② 분할 정복',dp:'③ 동적 계획법',mix:'② + ③ 종합'};
+const mkup=s=>esc(s).replace(/\[\[(.+?)\]\]/g,'<mark class="y1">$1</mark>').replace(/\{\{(.+?)\}\}/g,(m,a)=>'<mark class="y2">'+a.split('|')[0]+'</mark>').replace(/@@(.+?)@@/g,'<code>$1</code>');
+function toks(str){const o=[];let last=0;const re=/\[\[(.+?)\]\]|\{\{(.+?)\}\}|@@(.+?)@@/g;let m;
+  while((m=re.exec(str))){if(m.index>last)o.push({t:'t',v:str.slice(last,m.index)});
+    if(m[1]!=null)o.push({t:'b',a:m[1]});else if(m[2]!=null)o.push({t:'b',a:m[2]});else o.push({t:'c',v:m[3]});last=re.lastIndex}
+  if(last<str.length)o.push({t:'t',v:str.slice(last)});return o}
+const hasBlank=it=>it.k==='s'?/\[\[|\{\{/.test(it.x):it.k==='t'?it.rows.some(r=>r.some(c=>/\{\{|\[\[/.test(c))):false;
+const svgIco='<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 20V11M12 20V5M19 20v-6"/></svg>';
+function hero(){return `<header class="hero"><div class="hico">${svgIco}</div><div><div class="hlab">분할 정복 · 동적 계획법 · 수행평가</div><h1>수행평가 <span class="u">②③ 대비 노트</span></h1></div><button class="theme" data-act="theme" aria-label="테마 전환">🌓</button></header>`}
+function tabsBar(items){return `<nav class="tabs"><button class="tab home on-n" data-act="go" data-v="home" aria-label="처음 화면">🏠</button>${items}</nav>`}
+const tabBtn=(act,attrs,label,on)=>`<button class="tab${on?' on':''}" data-act="${act}" ${attrs}>${label}</button>`;
+
+/* ---- 홈 ---- */
+function vHome(){
+  const nw=Object.keys(store.wrong).length,last=store.hist.slice(-3).reverse();
+  return `<div class="homegrid"><button class="hbtn" data-act="go" data-v="study"><span class="e">📖</span><b>공부하러 가기</b><span>수업 내용 정리 → 빈칸 복습 → 따라쓰기</span></button>
+  <button class="hbtn" data-act="go" data-v="exam"><span class="e">📝</span><b>모의시험 보러 가기</b><span>시험지 스타일 · 한 문제씩 · 쉬운 것부터</span></button></div>
+  <div class="sub"><button class="chip" data-act="go" data-v="notes">📒 오답노트 ${nw}</button>${last.map(h=>`<span class="tag${h.score>=(h.max||9)?' ok':''}">${new Date(h.t).toLocaleDateString('ko-KR',{month:'numeric',day:'numeric'})} ${UN[h.u]||''} ${h.score}/${h.max||9}</span>`).join('')}</div>
+  <p class="mute" style="text-align:center">🤝 시험 내용은 촬영·공유하지 않기로 해요. 우리 반 의리!</p>`;
+}
+
+/* ---- 공부: 공통 ---- */
+function studyShell(inner){
+  const T=[['read','문장 보기'],['cloze','빈칸 복습'],['copy','코드 따라쓰기'],['practice','문제 연습'],['lab','직접 돌려보기']];
+  return hero()+tabsBar(T.map(([k,l])=>tabBtn('sTab',`data-v="${k}"`,l,sTab===k)).join('')+tabBtn('go','data-v="exam"','모의시험 →',false))+inner;
+}
+function unitChips(){return `<div class="row">${['dc','dp'].map(u=>`<button class="chip" data-act="studyU" data-u="${u}" aria-pressed="${studyU===u}">${UN[u]}</button>`).join('')}</div>`}
+function rangeSelect(){const S=SEC[studyU];return `<label>범위 <select data-sel="range"><option value="all">전체 (${S.length}개 단원)</option>${S.map((s,i)=>`<option value="${s.id}"${rangeSel===s.id?' selected':''}>${i+1}. ${esc(s.title.replace(/^\d+\.\s*/,''))}</option>`).join('')}</select></label>`}
+function secsShown(){return SEC[studyU].filter(s=>rangeSel==='all'||s.id===rangeSel)}
+
+/* ---- 문장 보기 ---- */
+function vRead(){
+  let no=0;const nums=new Map();
+  SEC[studyU].forEach(s=>s.items.forEach(it=>{if(it.k==='s')nums.set(it,++no)}));
+  const star=starSel;
+  const html=secsShown().map(sec=>{
+    const its=sec.items.filter(it=>it.k==='q'?star===0:(it.i||0)>=star);
+    if(!its.length)return '';
+    return `<section class="sec"><h3>${esc(sec.title)}</h3>${its.map(it=>{
+      const idx=sec.items.indexOf(it);
+      if(it.k==='q')return `<div class="qline">${mkup(it.x)}</div>`;
+      if(it.k==='s'){const hk=studyU+':'+sec.id+':'+idx;return `<div class="sc"><span class="no">${nums.get(it)}</span><div class="tx hlable" data-hk="${hk}">${store.hl[hk]||mkup(it.x)}</div><span class="st">${'★'.repeat(it.i)}</span></div>`}
+      if(it.k==='t')return `<div class="blk"><div class="bh"><span class="mute">표</span><span class="st" style="color:var(--star)">${'★'.repeat(it.i)}</span></div><div class="tw"><table>${it.head?`<tr>${it.head.map(c=>`<th>${mkup(c)}</th>`).join('')}</tr>`:''}${it.rows.map(r=>`<tr>${r.map(c=>`<td>${mkup(c)}</td>`).join('')}</tr>`).join('')}</table></div></div>`;
+      if(it.k==='c')return `<div class="blk"><div class="bh"><span>${mkup(it.title)}</span><span style="color:var(--star)">${'★'.repeat(it.i)}</span></div><pre>${esc(it.code)}</pre>${it.note?`<div class="note">${mkup(it.note)}</div>`:''}</div>`;
+      return '';}).join('')}</section>`}).join('');
+  return studyShell(`<p class="desc"><mark class="y1">진한 노란색</mark>은 핵심 용어, <mark class="y2">연한 노란색</mark>은 빈칸으로 나올 수 있는 단어입니다. ★ 중요 · ★★ 시험 단골.</p>
+  <div class="ctl">${unitChips()}${rangeSelect()}<label>별표 <select data-sel="star"><option value="0"${starSel===0?' selected':''}>전체</option><option value="1"${starSel===1?' selected':''}>★ 이상</option><option value="2"${starSel===2?' selected':''}>★★만</option></select></label>
+  <button class="chip" data-act="hltoggle" aria-pressed="${HL}">🖍️ 내 형광펜 ${HL?'ON':'OFF'}</button>${HL?`<button class="chip" data-act="hlclear">지우기</button>`:''}</div>
+  ${HL?`<p class="desc">문장을 드래그하면 노란 형광펜이 칠해져요. 칠한 곳을 누르면 지워져요.</p>`:''}
+  ${html||'<div class="card"><p>이 조건에 맞는 내용이 없어요.</p></div>'}
+  <div class="cta"><button class="btn big" data-act="sTab" data-v="cloze">다 읽었어요 → 빈칸으로 복습</button></div>`);
+}
+
+/* ---- 빈칸 복습 ---- */
+const CZI={};
+function czIn(key,i,ans,st){const v=(st.v||[])[i]||'';const r=st.chk?(eqAns(v,ans)?1:2):0;
+  const w=Math.min(24,Math.max(4,ans.split('|')[0].length*1.15+2));
+  return `<input class="fin${r===1?' ok':r===2?' bad':''}" data-cz="${key}" data-i="${i}" value="${esc(v)}" size="${Math.round(w)}" autocomplete="off" spellcheck="false" autocapitalize="off">${r===2?`<span class="fx">${esc(ans.split('|')[0])}</span>`:''}`}
+function czCard(key,no,it){
+  const st=CZ[key]||(CZ[key]={v:[],chk:false});const ans=[];let bi=0;
+  const seg=str=>toks(str).map(t=>t.t==='t'?esc(t.v):t.t==='c'?`<code>${esc(t.v)}</code>`:(ans.push(t.a),czIn(key,bi++,t.a,st))).join('');
+  let body;
+  if(it.k==='s')body=`<div class="tx">${seg(it.x)}</div>`;
+  else body=`<div class="tx"><div class="tw"><table>${it.head?`<tr>${it.head.map(c=>`<th>${seg(c)}</th>`).join('')}</tr>`:''}${it.rows.map(r=>`<tr>${r.map(c=>`<td>${seg(c)}</td>`).join('')}</tr>`).join('')}</table></div></div>`;
+  CZI[key]=ans;const ok=store.cz[key]===1;
+  return `<div class="cz${ok?' done':''}"><span class="no">${no}</span>${body}<span class="acts">${st.chk&&!ok?'<span class="tag bad">다시</span>':''}${ok?'<span class="tag ok">✓ 완료</span>':''}<button class="chip" data-act="czCheck" data-k="${key}">확인</button></span></div>`;
+}
+function czAll(u){const o=[];SEC[u].forEach(sec=>sec.items.forEach((it,idx)=>{if(hasBlank(it))o.push([u+':'+sec.id+':'+idx,sec,it])}));return o}
+function vCloze(){
+  const all=czAll(studyU),dn=all.filter(a=>store.cz[a[0]]===1).length;let no=0;
+  const nums=new Map();all.forEach(a=>nums.set(a[0],++no));
+  const html=secsShown().map(sec=>{
+    const cards=all.filter(a=>a[1]===sec&&(!czOnly||store.cz[a[0]]!==1));
+    if(!cards.length)return '';
+    return `<section class="sec"><h3>${esc(sec.title)}</h3>${cards.map(a=>czCard(a[0],nums.get(a[0]),a[2])).join('')}</section>`}).join('');
+  return studyShell(`<p class="desc">비어 있는 곳을 직접 써 보세요. (노란 칸 = 핵심 용어 · 빈칸 후보) 틀리면 정답이 초록색으로 보여요. 모두 맞히면 ✓ 완료로 저장돼요.</p>
+  <div class="ctl">${unitChips()}${rangeSelect()}<button class="chip" data-act="czOnly" aria-pressed="${czOnly}">미완료만</button><button class="chip" data-act="czAllChk">보이는 것 전체 확인</button><button class="chip" data-act="czReset">처음부터</button></div>
+  <div class="row"><div class="meter" style="flex:1;min-width:120px"><i style="width:${all.length?Math.round(100*dn/all.length):0}%"></i></div><span class="mute">${dn} / ${all.length} 완료</span></div>
+  ${html||'<div class="card"><p>🎉 이 범위의 빈칸을 모두 완료했어요!</p></div>'}
+  <div class="cta"><button class="btn big" data-act="go" data-v="exam">복습 끝! 모의시험으로 →</button></div>`);
+}
+
+/* ---- 따라쓰기 ---- */
+function vCopy(){
+  const L=SNIP.filter(s=>s.g===studyU);if(!cpSel||!L.some(s=>s.id===cpSel))cpSel=L[0].id;
+  const cur=L.find(s=>s.id===cpSel),typed=CPT[cur.id]||'';
+  let h=`<p class="desc">수업 코드와 정의를 그대로 타이핑해 손에 익히세요. <b>보고 쓰기</b>로 익힌 뒤 <b>안 보고 쓰기</b>로 확인합니다.</p><div class="ctl">${unitChips()}</div>
+  <div class="row">${L.map(s=>`<button class="chip${(store.cp[s.id]||0)>=100?' dn':''}" data-act="cpPick" data-id="${s.id}" aria-pressed="${cpSel===s.id}">${esc(s.n)}</button>`).join('')}</div>
+  <div class="card"><div class="row sp"><h3>${esc(cur.n)}</h3><span class="tag">최고 ${store.cp[cur.id]||0}%</span></div>
+  <div class="row"><button class="chip" data-act="cpMode" data-v="see" aria-pressed="${cpMode==='see'}">👀 보고 쓰기</button><button class="chip" data-act="cpMode" data-v="blind" aria-pressed="${cpMode==='blind'}">🙈 안 보고 쓰기</button></div>
+  ${cpMode==='see'?`<pre>${esc(cur.s)}</pre>`:`<div class="mute">정답이 가려져 있어요. 기억나는 대로 써 보세요.</div>`}
+  <textarea data-cp="${cur.id}" spellcheck="false" autocomplete="off" autocapitalize="off" style="min-height:${Math.max(120,cur.s.split('\n').length*26+16)}px" placeholder="여기에 타이핑 (Tab = 들여쓰기)">${esc(typed)}</textarea>
+  ${cpMode==='see'?`<div class="mirror" id="cpMirror"></div>`:''}
+  <div class="row"><button class="btn" data-act="cpCheck">확인</button><button class="btn g" data-act="cpClear">지우기</button></div>`;
+  if(cpChecked){const r=cmpLines(cur,typed),pct=Math.round(100*r.ok/r.total);
+    h+=`<div class="ans"><div class="row sp"><b>${pct===100?'완벽해요! 🎉':'줄 단위 비교'}</b><span class="tag ${pct===100?'ok':'bad'}">${r.ok} / ${r.total}줄 일치 (${pct}%)</span></div>${r.rows.map(x=>x.good?`<pre style="border-color:var(--ok)">✓ ${esc(x.l)}</pre>`:`<pre style="border-color:var(--bad)">✕ 내가 쓴 것: ${esc(x.t||'(비어 있음)')}\n→ 정답: ${esc(x.l)}</pre>`).join('')}</div>`}
+  return studyShell(h+`</div>`);
+}
+function cmpLines(cur,typed){const E=cur.s.split('\n'),T=typed.replace(/\t/g,'    ').split('\n');let ok=0;
+  const rows=E.map((l,i)=>{const t=(T[i]||'').replace(/\s+$/,'');const good=cur.k==='text'?nz(t)===nz(l):t===l.replace(/\s+$/,'');if(good)ok++;return {l,t,good}});return {ok,total:E.length,rows}}
+function mirrorHTML(cur,typed){let i=0;const s=cur.s;while(i<typed.length&&i<s.length&&typed[i]===s[i])i++;const rest=typed.slice(i);
+  return esc(typed.slice(0,i))+(rest?`<span class="w">${esc(rest)}</span>`:'')+`<span class="mute"> ${i}/${s.length}자 일치${rest?' — 빨간 부분부터 다시 확인!':''}</span>`}
+function updMirror(){const m=$('#cpMirror'),cur=cpSel&&SNIP.find(s=>s.id===cpSel);if(m&&cur)m.innerHTML=mirrorHTML(cur,CPT[cur.id]||'')}
+
+/* ---- 문제 연습 ---- */
+function vPractice(){
+  const ts=TOPICS.filter(t=>t.u===studyU);
+  let h=`<p class="desc">직접 쓰고 → 채점하기 → 내 답과 비교하세요. 서술·코드는 맞게 쓴 핵심어가 노란 형광펜으로 칠해져요. (기본 → 실전 → 고난도)</p><div class="ctl">${unitChips()}</div>
+  <div class="grid">${ts.map(t=>`<button class="card btnlike" data-act="pickTopic" data-t="${t.id}"${topic===t.id?' style="border-color:var(--y1);background:var(--hero2)"':''}><div class="row sp"><b>${t.e} ${esc(t.n)}</b><span class="tag">${topicPct(t.id)}%</span></div><div class="meter"><i style="width:${topicPct(t.id)}%"></i></div></button>`).join('')}</div>`;
+  if(topic&&tname(topic).u===studyU){
+    const ps=probsOf(topic).sort((a,b)=>a.lv-b.lv);if(!pset||!ps.some(p=>p.id===pset))pset=ps[0].id;
+    h+=`<div class="row">${ps.map(p=>`<button class="chip${done(p)?' dn':''}" data-act="pset" data-id="${p.id}" aria-pressed="${pset===p.id}">${stars(p.lv)} ${esc(p.title)}</button>`).join('')}</div>`+probHTML('pr',ps.find(p=>p.id===pset),'edit','');
+  }
+  return studyShell(h);
+}
+
+/* ---- 직접 돌려보기 ---- */
+function vLab(){
+  return studyShell(`<p class="desc">값을 바꿔 가며 수업에서 배운 호출 횟수·표를 눈으로 확인하세요. (f(1)=f(2)=1, 격자는 (0,0)이 출발)</p>
+  <div class="card"><h3>🌀 피보나치 호출 횟수</h3><div class="row"><label>n =</label><input type="number" id="fibN" min="1" max="30" value="6" style="width:90px"></div><div id="fibOut"></div></div>
+  <div class="card"><h3>🗺️ 격자 경로 표</h3><div class="grid"><label class="mute">행 수 R<input type="number" id="gR" min="1" max="8" value="4"></label><label class="mute">열 수 C<input type="number" id="gC" min="1" max="8" value="4"></label><label class="mute">막힌 칸 (예: 1,1 2,2)<input type="text" id="gB" placeholder="1,1"></label></div><div id="gridOut"></div></div>
+  <div class="card"><h3>🚀 2ⁿ 곱셈 횟수 (①②③)</h3><div class="row"><label>n =</label><input type="number" id="pwN" min="1" max="100000" value="10" style="width:120px"></div><div id="pwOut"></div></div>
+  <div class="card"><h3>🎯 이진 탐색 추적기</h3><div class="grid"><label class="mute">정렬된 리스트 (쉼표 구분)<input type="text" id="bsA" value="11,14,23,27,31,42,55,68,74,89"></label><label class="mute">target<input type="text" id="bsT" value="27"></label></div><div id="bsOut"></div></div>
+  <div class="card"><h3>🥞 병합 정렬 추적기</h3><label class="mute">리스트 (최대 8개)<input type="text" id="msA" value="5,2,4,7,1,3,2,6"></label><div id="msOut"></div></div>`);
+}
+function labFib(){const n=Math.max(1,Math.min(30,+$('#fibN').value||1));const dp=[0,1,1];for(let i=3;i<=n;i++)dp[i]=dp[i-1]+dp[i-2];
+  $('#fibOut').innerHTML=`<ul><li>f(${n}) = <b>${fibVal(n)}</b></li><li>메모 없는 재귀 호출 횟수: <b>${fibCalls(n)}</b> (c(n) = 1 + c(n-1) + c(n-2))</li><li>하향식(메모) 호출 횟수: <b>${fibMemoCalls(n)}</b></li><li>상향식 점화식 실행 횟수: <b>${Math.max(0,n-2)}</b></li></ul><div class="trace">dp = [${dp.slice(1,n+1).join(', ')}]  (dp[1]부터)</div>`}
+function labGrid(){
+  const R=Math.max(1,Math.min(8,+$('#gR').value||1)),C=Math.max(1,Math.min(8,+$('#gC').value||1));
+  const bl=new Set(($('#gB').value.match(/\d+\s*,\s*\d+/g)||[]).map(s=>s.replace(/\s/g,'')));
+  const dp=[];for(let i=0;i<R;i++){dp.push([]);for(let j=0;j<C;j++){dp[i][j]=bl.has(i+','+j)?0:(i===0&&j===0)?1:(i?dp[i-1][j]:0)+(j?dp[i][j-1]:0)}}
+  let extra='';
+  if(!bl.size){const cd=Array.from({length:R},()=>Array(C).fill(0));const f=(r,c)=>{cd[r][c]++;if(r===0&&c===0)return;if(r>0)f(r-1,c);if(c>0)f(r,c-1)};f(R-1,C-1);
+    extra=`<p>적어 두지 않을 때 호출 횟수: <b>${gCalls(R-1,C-1)}</b> · 동적 표(하향식) 호출 횟수: <b>${gMemoCalls(R,C)}</b> · 상향식 채운 칸: <b>${R*C}</b></p><div class="mute">called 표 (칸마다 호출된 횟수)</div><div class="tw"><table>${cd.map(r=>`<tr>${r.map(v=>`<td>${v}</td>`).join('')}</tr>`).join('')}</table></div>`}
+  $('#gridOut').innerHTML=`<div class="mute">P(r, c) 표</div><div class="tw"><table>${dp.map((r,i)=>`<tr>${r.map((v,j)=>`<td${bl.has(i+','+j)?' style="background:var(--badbg)"':''}>${v}</td>`).join('')}</tr>`).join('')}</table></div><p>도착 칸의 길의 수: <b>${dp[R-1][C-1]}</b></p>`+extra}
+function labPw(){const n=Math.max(1,Math.min(100000,+$('#pwN').value||1));
+  $('#pwOut').innerHTML=`<ul><li>① power_one(${n}) 곱셈: <b>${n}</b>번</li><li>② power_both(${n}) 곱셈: <b>${n-1}</b>번</li><li>③ power_half(${n}) 곱셈: <b>${pHalf(n)[1]}</b>번</li></ul>`}
+function labBS(){const a=$('#bsA').value.split(',').map(s=>s.trim()).filter(Boolean).map(Number),t=+$('#bsT').value;let lo=0,hi=a.length-1,out='',n=0;
+  while(n<60){n++;if(lo>hi){out+=`호출 ${n}: lo=${lo}, hi=${hi} → lo > hi, -1 반환\n`;break}
+    const mid=Math.floor((lo+hi)/2);out+=`호출 ${n}: lo=${lo}, hi=${hi}, mid=${mid}, A[mid]=${a[mid]}`;
+    if(a[mid]===t){out+=` → 찾음! ${mid} 반환\n`;break}
+    if(a[mid]<t){out+=` < ${t} → lo=${mid+1}\n`;lo=mid+1}else{out+=` > ${t} → hi=${mid-1}\n`;hi=mid-1}}
+  $('#bsOut').innerHTML=`<div class="trace">${esc(out)}</div>`}
+function labMS(){const a=$('#msA').value.split(',').map(s=>s.trim()).filter(Boolean).map(Number).slice(0,8),log=[];
+  const ms=(x,d)=>{const p='  '.repeat(d);log.push(p+'분할 ['+x.join(', ')+']');if(x.length<=1){log.push(p+'  → 원소 '+x.length+'개: 그대로 반환');return x}
+    const m=Math.floor(x.length/2),l=ms(x.slice(0,m),d+1),r=ms(x.slice(m),d+1),res=[];let i=0,j=0;while(i<l.length&&j<r.length)res.push(l[i]<=r[j]?l[i++]:r[j++]);
+    const out=res.concat(l.slice(i),r.slice(j));log.push(p+'결합 ['+l.join(', ')+'] + ['+r.join(', ')+'] → ['+out.join(', ')+']');return out};
+  ms(a,0);$('#msOut').innerHTML=`<div class="trace">${esc(log.join('\n'))}</div>`}
+function labAll(){labFib();labGrid();labPw();labBS();labMS()}
+
+/* ---- 오답노트 ---- */
+function vNotes(){
+  const ks=Object.keys(store.wrong).sort((a,b)=>store.wrong[b].t-store.wrong[a].t);
+  let h=hero()+tabsBar('')+(ks.length?`<p class="desc">틀린 문항이 모여 있어요. 다시 풀어서 ○가 되면 사라져요. (${ks.length}개)</p>`:`<div class="card"><h3>📒 오답노트</h3><p>틀린 문제가 없어요! 연습·모의시험에서 ✕로 채점된 문항이 여기에 모여요. ✨</p></div>`);
+  return h+ks.map(k=>{const [pid,i]=k.split(':');const p=PR.find(x=>x.id===pid);if(!p)return'';const pt=p.parts[+i];
+    return `<div class="card"><div class="row sp"><b>${tname(p.t).e} ${esc(p.title)} (${+i+1}) <span class="tag">${KL[pt.k]}</span></b><button class="btn g" data-act="practiceTopic" data-t="${p.t}" data-id="${p.id}">다시 풀기</button></div><p>${esc(pt.q)}</p>${pt.code?`<pre>${esc(pt.code)}</pre>`:''}<details><summary>내 답 / 정답 보기</summary><div class="mute">내 답안</div><div class="mine">${esc(store.wrong[k].a||'(없음)')}</div><div class="ans"><pre>${esc(modelText(pt))}</pre><div class="mute">💡 ${esc(pt.exp||'')}</div></div></details></div>`}).join('');
+}
+
+/* ---- 모의시험 ---- */
+function pickExam(u){
+  const units=u==='mix'?['dc','dp']:[u];let items=[];
+  units.forEach(un=>{const ts=TOPICS.filter(t=>t.u===un).sort(()=>Math.random()-.5).slice(0,3);const lvs=[1,2,3].sort(()=>Math.random()-.5);
+    ts.forEach((t,i)=>{const ps=probsOf(t.id).filter(p=>p.lv===lvs[i]);items.push(ps[Math.floor(Math.random()*ps.length)])})});
+  return items.sort((a,b)=>a.lv-b.lv||(Math.random()-.5));
+}
+function exScore(){let s=0;ex.items.forEach(p=>p.parts.forEach((_,i)=>{if(GR['ex|'+p.id+'|'+i]===1)s++}));return s}
+function examPart(p,i){
+  const key='ex|'+p.id+'|'+i,pt=p.parts[i],k=pt.k;INP[key]=INP[key]||[];
+  let L=`<div class="qt"><b class="n">(${i+1})</b>${esc(pt.q)} <span class="tag">1점</span></div>`,R='';
+  let bi=0;const mseg=str=>parseBlanks(str).map(s=>s.t==='t'?esc(s.v):`<span class="bm">${cir(bi++)}</span>`).join('');
+  const nb=blanksOf(pt).length;
+  const ains=()=>Array.from({length:nb},(_,j)=>`<label class="al"><span class="bm">${cir(j)}</span>${fieldIn(key,j,'x',false,false)}</label>`).join('');
+  if(k==='num'){if(pt.code)L+=`<pre>${esc(pt.code)}</pre>`;R=`<div class="lab">답을 쓰세요.</div>`+pt.fields.map((f,j)=>`<label class="al"><span>${esc(f[0])}</span>${fieldIn(key,j,'x',false,false)}</label>`).join('')}
+  else if(k==='blank'){L+=`<pre>${mseg(pt.code)}</pre>`;R=`<div class="lab">번호에 들어갈 말을 쓰세요.</div>`+ains()}
+  else if(k==='table'){L+=`<div class="tw"><table>${pt.head?`<tr>${pt.head.map(c=>`<th>${esc(c)}</th>`).join('')}</tr>`:''}${pt.rows.map(r=>`<tr>${r.map(c=>`<td>${mseg(c)}</td>`).join('')}</tr>`).join('')}</table></div>`;R=`<div class="lab">번호에 들어갈 말을 쓰세요.</div>`+ains()}
+  else if(k==='tf'){if(pt.code)L+=`<pre>${esc(pt.code)}</pre>`;const c=INP[key][0];
+    R=`<div class="row">${['O','X'].map(v=>`<button class="chip" style="font-size:16px;padding:4px 22px" data-act="tf" data-key="${key}" data-v="${v}" aria-pressed="${c===v}">${v==='O'?'○ 맞다':'✕ 틀리다'}</button>`).join('')}</div><div class="lab">판단하고, 이유를 쓰세요.</div><textarea data-key="${key}" spellcheck="false" placeholder="이유">${esc(ANS[key]||'')}</textarea>`}
+  else if(k==='order'){
+    if(!ORDSH[key]){let a=pt.steps.map((_,j)=>j);do{a.sort(()=>Math.random()-.5)}while(a.every((v,j)=>v===j));ORDSH[key]=a}
+    const sh=ORDSH[key],I=INP[key];L+=`<div style="display:grid;gap:4px">${sh.map((o,j)=>`<div><b>${KO[j]}.</b> ${esc(pt.steps[o])}</div>`).join('')}</div>`;
+    R=`<div class="lab">기호를 순서대로 눌러 배열하세요.</div><div class="ordshow">${I.length?I.map((o,j)=>`${j?'→ ':''}<span class="ob pk">${KO[sh.indexOf(o)]}</span>`).join(' '):'<span class="mute">(아직 없음)</span>'}</div>
+    <div class="ordshow">${sh.map((o,j)=>I.includes(o)?'':`<button class="ob" data-act="ord" data-key="${key}" data-o="${o}">${KO[j]}</button>`).join('')}<button class="chip" data-act="ordundo" data-key="${key}">↩</button><button class="chip" data-act="ordreset" data-key="${key}">초기화</button></div>`}
+  else{if(pt.code)L+=`<pre>${esc(pt.code)}</pre>`;R=`<div class="lab">${k==='code'?'파이썬 코드를 쓰세요. (Tab = 들여쓰기)':k==='fix'?'고친 코드를 쓰세요.':'답안을 쓰세요.'}</div><textarea data-key="${key}" spellcheck="false" autocomplete="off" autocapitalize="off" ${k==='essay'?'':'style="min-height:190px"'}>${esc(ANS[key]||'')}</textarea>`}
+  return `<div class="qrow"><div class="ql">${L}</div><div class="qr">${R}</div></div>`;
+}
+function vExam(){
+  if(!ex){
+    return hero()+tabsBar('')+`<div class="card lobby"><h3>📝 모의시험</h3><p class="desc">실제 시험처럼 시험지에 한 문제씩 풀어요. 쉬운 문제부터 어려운 문제 순이며, <b>다음 문제로 넘어가면 이전 문제로 돌아갈 수 없어요.</b></p>
+    <div class="ctl"><span class="mute">범위</span>${['dc','dp','mix'].map(u=>`<button class="chip" data-act="exU" data-u="${u}" aria-pressed="${exU===u}">${UN[u]}</button>`).join('')}</div>
+    <div class="ctl"><span class="mute">시간</span>${[[25,'25분'],[50,'50분'],[0,'제한 없음']].map(([m,l])=>`<button class="chip" data-act="exT" data-v="${m}" aria-pressed="${exT===m}">${l}</button>`).join('')}</div>
+    <ul class="mute" style="margin:0;padding-left:20px"><li>${exU==='mix'?'6문제 (② 3문제 + ③ 3문제) · 18점':'3문제 · 문제당 소문항 3개 · 9점'}</li><li>6개 주제 중 3개가 무작위로 나와요. (종료 조건 · 4단계는 어디서나 나올 수 있어요)</li><li>제출하면 자동 채점 + 내 답과 모범 답안을 비교해 ○/✕를 직접 고칠 수 있어요.</li></ul>
+    <div><button class="btn big" data-act="exStart">시험 시작</button></div></div>`;
+  }
+  if(ex.phase==='run'){
+    const p=ex.items[ex.cur],last=ex.cur===ex.items.length-1,pts=ex.items.length*3;
+    return hero()+`<div class="bar sheetbar"><div class="dots">${ex.items.map((_,i)=>`<span class="dot${i<ex.cur?' dn':i===ex.cur?' on':''}"></span>`).join('')}<span class="mute">&nbsp;${ex.cur+1} / ${ex.items.length}</span></div><span class="timer" id="timer">${ex.end?'--:--':'∞'}</span></div>
+    <article class="paper"><div class="ph"><div><div class="tt">수행평가 ${UN[ex.u]} 모의시험</div><div class="mute">${ex.end?exT+'분':'시간 제한 없음'} · ${ex.items.length}문제 · ${pts}점</div></div><div class="who">반<span></span> 번호<span></span> 이름<span></span></div></div>
+    <div class="pq"><h2>문제 ${ex.cur+1}. ${esc(p.title)}<span class="pt">3점</span></h2><p>${esc(p.intro)}</p></div>
+    ${p.parts.map((_,i)=>examPart(p,i)).join('')}
+    <div class="pnext"><span class="mute">${last?'마지막 문제예요. 제출하면 수정할 수 없어요.':'다음으로 넘어가면 이 문제로 돌아올 수 없어요.'}</span>${last?(ex.confirm?`<span class="row"><button class="btn g" data-act="exCancel">더 쓸래요</button><button class="btn big" data-act="exSubmit">정말 제출</button></span>`:`<button class="btn big" data-act="exAsk">답안 제출</button>`):`<button class="btn big" data-act="exNext">다음 문제 →</button>`}</div></article>`;
+  }
+  const sc=exScore(),mx=ex.items.length*3;
+  return hero()+tabsBar('')+`<div class="card" style="background:var(--hero2)"><div class="row sp"><div><h3>채점 결과</h3><p class="desc">자동 판정이 반영됐어요. 서술·코드는 모범 답안과 비교해 ○/✕를 직접 고쳐 보세요.</p></div><div class="score">${sc}<span class="mute" style="font-size:20px"> / ${mx}</span></div></div><div class="row"><button class="btn" data-act="exAgain">같은 범위 다시</button><button class="btn g" data-act="exEnd">로비로</button><button class="btn g" data-act="go" data-v="notes">📒 오답노트</button></div></div>`
+    +ex.items.map((p,i)=>probHTML('ex',p,'review','문제 '+(i+1)+'.')).join('');
+}
+function tick(){const el=$('#timer');if(!el||!ex||ex.phase!=='run'||!ex.end)return;
+  const left=Math.max(0,Math.ceil((ex.end-Date.now())/1000));el.textContent=String(Math.floor(left/60)).padStart(2,'0')+':'+String(left%60).padStart(2,'0');
+  el.classList.toggle('warn',left<=300);if(left<=0)exSubmit()}
+function exSubmit(){
+  if(!ex||ex.phase!=='run')return;clearInterval(timerId);ex.phase='done';ex.confirm=false;
+  ex.items.forEach(p=>p.parts.forEach((pt,i)=>{const key='ex|'+p.id+'|'+i;GR[key]=autoGrade(pt,key)?1:0;
+    const g=store.pg[p.id]||[null,null,null];g[i]=GR[key];store.pg[p.id]=g;
+    if(GR[key]===0)store.wrong[p.id+':'+i]={t:Date.now(),a:ansText(key,pt)};else delete store.wrong[p.id+':'+i]}));
+  store.hist.push({t:Date.now(),u:ex.u,score:exScore(),max:ex.items.length*3});ex.hid=store.hist.length-1;save();render();window.scrollTo(0,0)}
+function exStart(){clearInterval(timerId);
+  [ANS,INP,GR,CHK,ORDSH,MSG].forEach(o=>Object.keys(o).filter(k=>k.startsWith('ex|')).forEach(k=>delete o[k]));
+  ex={u:exU,items:pickExam(exU),cur:0,phase:'run',end:exT?Date.now()+exT*60000:null,confirm:false};
+  if(exT)timerId=setInterval(tick,1000);render();window.scrollTo(0,0)}
+
+/* ---- 라우팅·렌더 ---- */
+const VF={home:()=>hero()+vHome(),study:()=>({read:vRead,cloze:vCloze,copy:vCopy,practice:vPractice,lab:vLab})[sTab](),exam:vExam,notes:vNotes};
+function render(){
+  $('#root').innerHTML=VF[view]();
+  if(view==='study'&&sTab==='lab')labAll();
+  if(view==='study'&&sTab==='copy')updMirror();
+  if(view==='exam')tick();
+}
+function setView(v){view=v;try{if(location.hash!=='#'+v)location.hash=v}catch(e){}render();window.scrollTo(0,0)}
+function applyHL(){
+  if(!HL)return;const sel=getSelection();if(!sel||!sel.rangeCount||sel.isCollapsed)return;
+  const r=sel.getRangeAt(0),n=r.commonAncestorContainer,el=n.nodeType===1?n:n.parentElement,box=el&&el.closest('.hlable');if(!box)return;
+  const mk=document.createElement('mark');mk.className='ink';
+  try{r.surroundContents(mk)}catch(e){try{mk.appendChild(r.extractContents());r.insertNode(mk)}catch(_){return}}
+  sel.removeAllRanges();store.hl[box.dataset.hk]=box.innerHTML;save();
+}
+
+/* ---- 이벤트 ---- */
+function resetPart(key){delete CHK[key];delete GR[key];delete MSG[key]}
+function czCheckKeys(keys){keys.forEach(k=>{const st=CZ[k]||(CZ[k]={v:[],chk:false});st.chk=true;const A=CZI[k]||[];
+  if(A.length&&A.every((a,i)=>eqAns((st.v||[])[i]||'',a)))store.cz[k]=1});save();render()}
+document.addEventListener('click',e=>{
+  const mk=e.target.closest('mark.ink');
+  if(mk&&HL&&mk.closest('.hlable')){const box=mk.closest('.hlable');mk.replaceWith(...mk.childNodes);box.normalize();store.hl[box.dataset.hk]=box.innerHTML;save();return}
+  const b=e.target.closest('[data-act]');if(!b||b.disabled)return;
+  const a=b.dataset.act,key=b.dataset.key;
+  if(a==='theme'){const cur=document.documentElement.getAttribute('data-theme');const dark=cur?cur==='dark':matchMedia('(prefers-color-scheme:dark)').matches;const nx=dark?'light':'dark';document.documentElement.setAttribute('data-theme',nx);try{localStorage.setItem('dcdp-theme',nx)}catch(_){}return}
+  if(a==='go'){if(b.dataset.v==='exam'&&ex&&ex.phase!=='run'){}setView(b.dataset.v);return}
+  if(a==='sTab'){sTab=b.dataset.v;if(view!=='study')view='study';render();window.scrollTo(0,0);return}
+  if(a==='studyU'){studyU=b.dataset.u;rangeSel='all';topic=null;pset=null;cpSel=null;render();return}
+  if(a==='pickTopic'){topic=b.dataset.t;pset=null;render();return}
+  if(a==='pset'){pset=b.dataset.id;render();return}
+  if(a==='practiceTopic'){topic=b.dataset.t;studyU=tname(topic).u;pset=b.dataset.id||null;sTab='practice';setView('study');return}
+  if(a==='hint'){HNT[key]=true;render();return}
+  if(a==='check'){const [,pid,i]=key.split('|');const pt=PR.find(x=>x.id===pid).parts[+i];
+    if(FUZ(pt.k)&&pt.k!=='tf'&&!(ANS[key]||'').trim()){MSG[key]='먼저 직접 써 본 다음에 채점할 수 있어요!';render();return}
+    if(pt.k==='tf'&&!(INP[key]||[])[0]){MSG[key]='○ 또는 ✕ 를 먼저 골라 주세요.';render();return}
+    delete MSG[key];CHK[key]=true;setGrade(key,autoGrade(pt,key)?1:0);render();return}
+  if(a==='retry'){resetPart(key);if(PR.find(x=>x.id===key.split('|')[1]).parts[+key.split('|')[2]].k==='order')INP[key]=[];render();return}
+  if(a==='grade'){setGrade(key,+b.dataset.v);render();return}
+  if(a==='tf'){INP[key][0]=b.dataset.v;delete MSG[key];render();return}
+  if(a==='ord'){INP[key].push(+b.dataset.o);render();return}
+  if(a==='ordundo'){INP[key].pop();render();return}
+  if(a==='ordreset'){INP[key]=[];render();return}
+  if(a==='hltoggle'){HL=!HL;render();return}
+  if(a==='hlclear'){Object.keys(store.hl).filter(k=>k.startsWith(studyU+':')).forEach(k=>delete store.hl[k]);save();render();return}
+  if(a==='czOnly'){czOnly=!czOnly;render();return}
+  if(a==='czCheck'){czCheckKeys([b.dataset.k]);return}
+  if(a==='czAllChk'){czCheckKeys(Object.keys(CZI).filter(k=>k.startsWith(studyU+':')&&document.querySelector('[data-cz="'+k+'"]')));return}
+  if(a==='czReset'){Object.keys(store.cz).filter(k=>k.startsWith(studyU+':')).forEach(k=>delete store.cz[k]);Object.keys(CZ).filter(k=>k.startsWith(studyU+':')).forEach(k=>delete CZ[k]);save();render();return}
+  if(a==='cpPick'){cpSel=b.dataset.id;cpChecked=false;render();return}
+  if(a==='cpMode'){cpMode=b.dataset.v;cpChecked=false;render();return}
+  if(a==='cpCheck'){cpChecked=true;const cur=SNIP.find(s=>s.id===cpSel),r=cmpLines(cur,CPT[cur.id]||''),pct=Math.round(100*r.ok/r.total);if(cpMode==='blind'||pct===100)store.cp[cur.id]=Math.max(store.cp[cur.id]||0,pct);save();render();return}
+  if(a==='cpClear'){CPT[cpSel]='';cpChecked=false;render();return}
+  if(a==='exU'){exU=b.dataset.u;if(exT)exT=exU==='mix'?50:25;render();return}
+  if(a==='exT'){exT=+b.dataset.v;render();return}
+  if(a==='exStart'||a==='exAgain'){exStart();return}
+  if(a==='exNext'){ex.cur++;ex.confirm=false;render();window.scrollTo(0,0);return}
+  if(a==='exAsk'){ex.confirm=true;render();return}
+  if(a==='exCancel'){ex.confirm=false;render();return}
+  if(a==='exSubmit'){exSubmit();return}
+  if(a==='exEnd'){clearInterval(timerId);ex=null;render();window.scrollTo(0,0);return}
+});
+document.addEventListener('input',e=>{const t=e.target,d=t.dataset||{};
+  if(d.cp){CPT[d.cp]=t.value;cpChecked=false;updMirror();return}
+  if(d.cz){const st=CZ[d.cz]||(CZ[d.cz]={v:[],chk:false});st.v[+d.i]=t.value;return}
+  if(d.key){if(d.i!=null){INP[d.key][+d.i]=t.value}else ANS[d.key]=t.value;return}
+  if(t.id==='fibN')labFib();else if(t.id==='gR'||t.id==='gC'||t.id==='gB')labGrid();else if(t.id==='pwN')labPw();else if(t.id==='bsA'||t.id==='bsT')labBS();else if(t.id==='msA')labMS()});
+document.addEventListener('change',e=>{const t=e.target,s=t.dataset&&t.dataset.sel;
+  if(s==='range'){rangeSel=t.value;render()}else if(s==='star'){starSel=+t.value;render()}});
+document.addEventListener('keydown',e=>{const t=e.target;
+  if(e.key==='Tab'&&t.tagName==='TEXTAREA'){e.preventDefault();t.setRangeText('    ',t.selectionStart,t.selectionEnd,'end');
+    if(t.dataset.cp){CPT[t.dataset.cp]=t.value;cpChecked=false;updMirror()}else if(t.dataset.key)ANS[t.dataset.key]=t.value}
+  if(e.key==='Enter'&&t.dataset&&t.dataset.cz){const f=[...document.querySelectorAll('[data-cz="'+t.dataset.cz+'"]')];const i=f.indexOf(t);if(i<f.length-1)f[i+1].focus();else czCheckKeys([t.dataset.cz])}});
+document.addEventListener('mouseup',()=>setTimeout(applyHL,0));
+document.addEventListener('touchend',()=>setTimeout(applyHL,50));
+window.addEventListener('hashchange',()=>{const v=location.hash.slice(1);if(VF[v]&&v!==view){view=v;render();window.scrollTo(0,0)}});
+{const v=location.hash.slice(1);if(VF[v])view=v}
+render();
+</script>
