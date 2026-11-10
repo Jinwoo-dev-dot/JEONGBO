@@ -1,3 +1,8 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>분할정복 동적계획 노트</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -27,7 +32,7 @@
   --ok:#74dba7;--okbg:#17332a;--bad:#ff9fb8;--badbg:#431f2c;--star:#ffc233;
   --code:#1b1a16;--codefg:#eee8d2;--paper:#1c1b17;--paperline:#3b3829;--rule:#2d2b22;
   --btn:#f2c919;--btnfg:#1d1b12;--shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.3);color-scheme:dark}
-*{box-sizing:border-box}
+*{box-sizing:border-box;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
 body{background:var(--bg);color:var(--fg);font-family:var(--f-sans);font-size:16px;line-height:1.7;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 80px;word-break:keep-all;overflow-wrap:anywhere}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:30}
@@ -54,7 +59,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .desc mark{padding:0 4px;border-radius:3px}
 .ctl{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .ctl label{white-space:nowrap;font-size:14px;color:var(--mute);display:flex;gap:8px;align-items:center;min-width:0;max-width:100%}.ctl select{min-width:0;max-width:100%;text-overflow:ellipsis}
-select{font:inherit;font-size:15px;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:7px 10px;max-width:100%}
+select{font:inherit;font-size:16px;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:7px 10px;max-width:100%}
 .chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:5px 14px;font-size:14px;font-weight:500}
 .chip[aria-pressed="true"],.chip.sel{background:var(--y1);border-color:var(--y1);color:#26241f;font-weight:700}
 .chip.dn::after{content:" ✓";color:var(--ok);font-weight:700}
@@ -103,13 +108,13 @@ pre{margin:0;font-family:var(--f-mono);font-size:13.5px;line-height:1.65;backgro
 .hbtn .e{font-size:30px}
 .sub{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
 /* inputs */
-.fin{font:inherit;font-size:15px;border:0;border-bottom:2px solid var(--y1);background:var(--y2t);color:var(--fg);border-radius:6px 6px 0 0;padding:1px 6px;min-width:3em;max-width:100%}
+.fin{font:inherit;font-size:16px;border:0;border-bottom:2px solid var(--y1);background:var(--y2t);color:var(--fg);border-radius:6px 6px 0 0;padding:1px 6px;min-width:3em;max-width:100%}
 .fin:focus{outline:2px solid var(--y1);outline-offset:1px}
 .fin.ok{border-color:var(--ok);background:var(--okbg);color:var(--ok);font-weight:700}
 .fin.bad{border-color:var(--bad);background:var(--badbg);color:var(--bad)}
 .fx{font-size:13px;color:var(--ok);margin-left:4px;font-weight:700}
 textarea,input[type=text],input[type=number]{font:inherit;color:var(--fg);background:var(--bg);border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;width:100%;max-width:100%}
-textarea{min-height:110px;resize:vertical;font-family:var(--f-mono);font-size:14px;line-height:1.7;tab-size:4}
+textarea{min-height:110px;resize:vertical;font-family:var(--f-mono);font-size:16px;line-height:1.7;tab-size:4}
 textarea:focus,input[type=text]:focus,input[type=number]:focus{outline:2px solid var(--y1);border-color:var(--y1)}
 /* czcard */
 .cz{display:flex;gap:12px;align-items:flex-start;background:var(--card);border-radius:16px;padding:14px 16px;flex-wrap:wrap}
@@ -185,6 +190,10 @@ textarea:focus,input[type=text]:focus,input[type=number]:focus{outline:2px solid
   .paper{padding:16px 16px 20px}.hero h1{font-size:22px}.hero{padding:16px}.homegrid{grid-template-columns:minmax(0,1fr)}.hbtn{min-height:0;padding:20px}
 }
 </style>
+<style>html{padding-top:env(safe-area-inset-top,0px)}</style>
+</head>
+<body>
+
 <div class="wrap" id="root"></div>
 <script>
 const $=s=>document.querySelector(s);
@@ -1257,6 +1266,21 @@ def fib(n):
         dp[i] = dp[i-1] + dp[i-2]
     return dp[n]`}
 ];
+
+/* 정의·용어 채우기 문항은 제외 */
+{const DROP=new Set(['m1:0', 's1:1', 't4:2', 'e1:0', 'b1:0', 'b3:1', 'g3:0', 'u3:0', 'k1:0', 'k2:0', 'k4:1']);PR.forEach(p=>{p.parts=p.parts.filter((_,i)=>!DROP.has(p.id+':'+i))})}
+const ADD=(id,pt)=>PR.find(p=>p.id===id).parts.push(pt);
+ADD('m1',NUM('[6, 2, 5, 1]을 병합 정렬할 때, 맨 마지막 병합에서 합쳐지는 두 리스트의 길이와 최종 결과의 첫 번째 값은?',[['왼쪽 길이',2],['오른쪽 길이',2],['결과 첫 값',1]],'반으로 나누면 [6, 2]와 [5, 1], 각각 정렬하면 [2, 6]과 [1, 5]. 합치면 [1, 2, 5, 6].',null,'먼저 반씩 나누고, 각각 정렬한 뒤 합쳐 보세요.'));
+ADD('s1',TF('"school[2]는 3학년 리스트이므로 count_glasses(school[2])는 3학년 전체에서 안경 쓴 학생 수이다."',true,[['3학년','학년'],['전체','모든','합','더']],'○. school[2]는 3학년 리스트이고, 그 안의 모든 반의 안경 쓴 학생 수를 더한 값을 반환한다.'));
+ADD('t4',TF('"is_sorted는 리스트가 이미 정렬되어 있으면 호출 횟수가 줄어든다."',false,[['항상','둘다','모두'],['2n-1','같','관계없']],'✕. left와 right를 항상 둘 다 계산하므로 정렬 여부와 관계없이 호출 횟수는 2n-1로 같다.'));
+ADD('e1',NUM('n = 5 일 때 power_one, power_both, power_half 의 곱셈 횟수는?',[['power_one(5)',pOne(5)[1]],['power_both(5)',pBoth(5)[1]],['power_half(5)',pHalf(5)[1]]],'① n번, ② n-1번, ③ 5 → 2 → 1 → 0 으로 내려가며 제곱 3번 + 홀수 때 2번.',null,'power_half(5): 5 → 2 → 1 → 0'));
+ADD('b1',TF('"이진 탐색은 정렬되어 있지 않은 리스트에서도 올바르게 동작한다."',false,[['정렬'],['한쪽','버','가운데','비교']],'✕. 가운데 값과 비교해 한쪽 반을 버리는 방식이라 리스트가 정렬되어 있어야 한다.'));
+ADD('b3',TF('"이진 탐색에서 target이 리스트에 없으면 마지막에 lo > hi 가 되어 -1 을 반환한다."',true,[['lo>hi','후보'],['-1']],'○. 남은 후보가 없어지면 lo > hi 가 되어 -1 을 반환한다.'));
+ADD('g3',TF('"가장 적은 비용을 구하는 점화식에서는 위쪽 칸과 왼쪽 칸의 값을 더한다."',false,[['min','작은'],['비용','cost']],'✕. 두 값을 더하는 것이 아니라 위쪽·왼쪽 중 더 작은 값을 골라 현재 칸의 비용을 더한다.'));
+ADD('u3',NUM('N = 5 격자에서 상향식이 채우는 칸 수, 하향식(동적 표) 호출 횟수, 동적 표 없이 호출 횟수는?',[['상향식 칸',25],['하향식 호출',gMemoCalls(5,5)],['표 없이 호출',gCalls(4,4)]],'상향식은 N×N 칸을 모두 채운다. 하향식은 표 덕분에 칸 수에 비례한다.'));
+ADD('k1',ESS('병합 정렬은 분할 정복이고 격자의 길 세기는 동적 계획법으로 분류하는 이유를 한 문장으로 쓰시오.','병합 정렬의 작은 문제는 서로 다른 부분을 다루지만, 격자의 길 세기는 똑같은 칸의 답이 여러 곳에서 필요해 표에 적어 두고 다시 쓰기 때문이다.',[['똑같','겹','여러'],['다른','서로']],'다른 대상 vs 똑같은 문제가 여러 곳에서 필요.','작은 문제가 서로 다른가, 똑같은가?'));
+ADD('k2',NUM('f(6)을 메모 없이 구할 때 f(3)이 구해지는 횟수와 전체 호출 횟수는?',[['f(3) 횟수',fibCnt(3,6)],['전체 호출',fibCalls(6)]],'호출 나무를 그려서 센다.',null,'f(6) → f(5), f(4) …'));
+ADD('k4',TF('"외판원 문제에서 도시가 10개이면, 나머지 9개 도시를 도는 모든 순서는 9! 가지이다."',true,[['9!','9개'],['가지','순서']],'○. 나머지 9개 도시를 도는 순서는 9! = 362,880가지이다.'));
 /* ---------- 상태 ---------- */
 const ANS={},INP={},GR={},CHK={},HNT={},MSG={},ORDSH={};
 let view='home',studyU='dc',sTab='read',rangeSel='all',starSel=0,unitF='dc',topic=null,pset=null,ex=null,timerId=null,HL=false,exU='dc',exT=25,czOnly=false;
@@ -1267,7 +1291,7 @@ const stars=n=>'★'.repeat(n)+'☆'.repeat(3-n);
 const LVN=['전체','기본','실전','고난도'];
 const tname=id=>TOPICS.find(t=>t.id===id);
 const probsOf=t=>PR.filter(p=>p.t===t);
-const done=p=>{const g=store.pg[p.id];return g&&g.length===3&&g.every(x=>x===1)};
+const done=p=>{const g=store.pg[p.id];return !!g&&p.parts.every((_,i)=>g[i]===1)};
 const topicPct=t=>{const ps=probsOf(t);return Math.round(100*ps.filter(done).length/ps.length)};
 const unitPct=u=>{const ts=TOPICS.filter(t=>t.u===u);return Math.round(ts.reduce((a,t)=>a+topicPct(t.id),0)/ts.length)};
 
@@ -1481,10 +1505,10 @@ function czCard(key,no,it){
   CZI[key]=ans;const ok=store.cz[key]===1;
   return `<div class="cz${ok?' done':''}"><span class="no">${no}</span>${body}<span class="acts">${st.chk&&!ok?'<span class="tag bad">다시</span>':''}${ok?'<span class="tag ok">✓ 완료</span>':''}<button class="chip" data-act="czCheck" data-k="${key}">확인</button></span></div>`;
 }
-let czCore=true;
-const nBl=it=>it.k==='s'?toks(it.x).filter(t=>t.t==='b').length:it.rows.reduce((a,r)=>a+r.reduce((b,c)=>b+toks(c).filter(t=>t.t==='b').length,0),0);
-function czAll(u){const o=[];SEC[u].forEach(sec=>sec.items.forEach((it,idx)=>{if(!hasBlank(it))return;
-  if(czCore&&((it.i||0)<2||sec.id==='d3'||sec.id==='p3'||nBl(it)>5))return;o.push([u+':'+sec.id+':'+idx,sec,it])}));return o}
+let czCore=true;const CZ_SKIP=new Set(['dc:d6:1','dc:d7:9','dp:p5:1','dp:p6:6','dp:p7:0','dp:p8:4','dp:p11:4','dp:p11:8']);
+const CZ_KEEP=new Set('dc:d4:1 dc:d6:1 dc:d6:2 dc:d8:3 dc:d8:4 dc:d9:0 dc:d9:1 dc:d10:2 dc:d10:3 dc:d10:4 dc:d11:3 dc:d7:9 dp:p1:3 dp:p2:2 dp:p4:2 dp:p4:5 dp:p4:7 dp:p4:8 dp:p5:1 dp:p6:4 dp:p6:6 dp:p7:0 dp:p7:2 dp:p7:5 dp:p7:6 dp:p7:7 dp:p8:0 dp:p8:4 dp:p9:2 dp:p9:3 dp:p10:1 dp:p11:2 dp:p11:4 dp:p11:5 dp:p11:8'.split(' '));
+function czAll(u){const o=[];SEC[u].forEach(sec=>sec.items.forEach((it,idx)=>{if(!hasBlank(it))return;const k=u+':'+sec.id+':'+idx;
+  if(czCore&&!CZ_KEEP.has(k))return;o.push([k,sec,it])}));return o}
 function vCloze(){
   const all=czAll(studyU),dn=all.filter(a=>store.cz[a[0]]===1).length;let no=0;
   const nums=new Map();all.forEach(a=>nums.set(a[0],++no));
@@ -1492,7 +1516,7 @@ function vCloze(){
     const cards=all.filter(a=>a[1]===sec&&(!czOnly||store.cz[a[0]]!==1));
     if(!cards.length)return '';
     return `<section class="sec"><h3>${esc(sec.title)}</h3>${cards.map(a=>czCard(a[0],nums.get(a[0]),a[2])).join('')}</section>`}).join('');
-  return studyShell(`<p class="desc">비어 있는 곳을 직접 써 보세요. 기본은 ★★(시험 단골) 문장만 나와요. (⭐ 핵심만을 끄면 전체) 틀리면 정답이 초록색으로 보여요. 모두 맞히면 ✓ 완료로 저장돼요.</p>
+  return studyShell(`<p class="desc">비어 있는 곳을 직접 써 보세요. 기본은 헷갈리지 않는 핵심 빈칸(숫자·코드·오류·순서·구분)만 나와요. (⭐ 핵심만을 끄면 전체) 틀리면 정답이 초록색으로 보여요. 모두 맞히면 ✓ 완료로 저장돼요.</p>
   <div class="ctl">${unitChips()}${rangeSelect()}<button class="chip" data-act="czCore" aria-pressed="${czCore}">⭐ 핵심만</button><button class="chip" data-act="czOnly" aria-pressed="${czOnly}">미완료만</button><button class="chip" data-act="czAllChk">보이는 것 전체 확인</button><button class="chip" data-act="czReset">처음부터</button></div>
   <div class="row"><div class="meter" style="flex:1;min-width:120px"><i style="width:${all.length?Math.round(100*dn/all.length):0}%"></i></div><span class="mute">${dn} / ${all.length} 완료</span></div>
   ${html||'<div class="card"><p>🎉 이 범위의 빈칸을 모두 완료했어요!</p></div>'}
@@ -1571,7 +1595,7 @@ function labAll(){labFib();labGrid();labPw();labBS();labMS()}
 function vNotes(){
   const ks=Object.keys(store.wrong).sort((a,b)=>store.wrong[b].t-store.wrong[a].t);
   let h=hero()+tabsBar('')+(ks.length?`<p class="desc">틀린 문항이 모여 있어요. 다시 풀어서 ○가 되면 사라져요. (${ks.length}개)</p>`:`<div class="card"><h3>📒 오답노트</h3><p>틀린 문제가 없어요! 연습·모의시험에서 ✕로 채점된 문항이 여기에 모여요. ✨</p></div>`);
-  return h+ks.map(k=>{const [pid,i]=k.split(':');const p=PR.find(x=>x.id===pid);if(!p)return'';const pt=p.parts[+i];
+  return h+ks.map(k=>{const [pid,i]=k.split(':');const p=PR.find(x=>x.id===pid);if(!p||!p.parts[+i])return'';const pt=p.parts[+i];
     return `<div class="card"><div class="row sp"><b>${tname(p.t).e} ${esc(p.title)} (${+i+1}) <span class="tag">${KL[pt.k]}</span></b><button class="btn g" data-act="practiceTopic" data-t="${p.t}" data-id="${p.id}">다시 풀기</button></div><p>${esc(pt.q)}</p>${pt.code?`<pre>${esc(pt.code)}</pre>`:''}<details><summary>내 답 / 정답 보기</summary><div class="mute">내 답안</div><div class="mine">${esc(store.wrong[k].a||'(없음)')}</div><div class="ans"><pre>${esc(modelText(pt))}</pre><div class="mute">💡 ${esc(pt.exp||'')}</div></div></details></div>`}).join('');
 }
 
@@ -1607,18 +1631,18 @@ function vExam(){
     return hero()+tabsBar('')+`<div class="card lobby"><h3>📝 모의시험</h3><p class="desc">실제 시험처럼 시험지에 한 문제씩 풀어요. 쉬운 문제부터 어려운 문제 순이며, <b>다음 문제로 넘어가면 이전 문제로 돌아갈 수 없어요.</b></p>
     <div class="ctl"><span class="mute">범위</span>${['dc','dp','mix'].map(u=>`<button class="chip" data-act="exU" data-u="${u}" aria-pressed="${exU===u}">${UN[u]}</button>`).join('')}</div>
     <div class="ctl"><span class="mute">시간</span>${[[25,'25분'],[50,'50분'],[0,'제한 없음']].map(([m,l])=>`<button class="chip" data-act="exT" data-v="${m}" aria-pressed="${exT===m}">${l}</button>`).join('')}</div>
-    <ul class="mute" style="margin:0;padding-left:20px"><li>${exU==='mix'?'6문제 (② 3문제 + ③ 3문제) · 18점':'3문제 · 문제당 소문항 3개 · 9점'}</li><li>6개 주제 중 3개가 무작위로 나와요. (종료 조건 · 4단계는 어디서나 나올 수 있어요)</li><li>제출하면 자동 채점 + 내 답과 모범 답안을 비교해 ○/✕를 직접 고칠 수 있어요.</li></ul>
+    <ul class="mute" style="margin:0;padding-left:20px"><li>${exU==='mix'?'6문제 (② 3문제 + ③ 3문제)':'3문제'} · 소문항마다 1점</li><li>6개 주제 중 3개가 무작위로 나와요. (종료 조건 · 4단계는 어디서나 나올 수 있어요)</li><li>제출하면 자동 채점 + 내 답과 모범 답안을 비교해 ○/✕를 직접 고칠 수 있어요.</li></ul>
     <div><button class="btn big" data-act="exStart">시험 시작</button></div></div>`;
   }
   if(ex.phase==='run'){
     const p=ex.items[ex.cur],last=ex.cur===ex.items.length-1,pts=ex.items.length*3;
     return hero()+`<div class="bar sheetbar"><div class="dots">${ex.items.map((_,i)=>`<span class="dot${i<ex.cur?' dn':i===ex.cur?' on':''}"></span>`).join('')}<span class="mute">&nbsp;${ex.cur+1} / ${ex.items.length}</span></div><span class="timer" id="timer">${ex.end?'--:--':'∞'}</span></div>
     <article class="paper"><div class="ph"><div><div class="tt">수행평가 ${UN[ex.u]} 모의시험</div><div class="mute">${ex.end?exT+'분':'시간 제한 없음'} · ${ex.items.length}문제 · ${pts}점</div></div><div class="who">반<span></span> 번호<span></span> 이름<span></span></div></div>
-    <div class="pq"><h2>문제 ${ex.cur+1}. ${esc(p.title)}<span class="pt">3점</span></h2><p>${esc(p.intro)}</p></div>
+    <div class="pq"><h2>문제 ${ex.cur+1}. ${esc(p.title)}<span class="pt">${p.parts.length}점</span></h2><p>${esc(p.intro)}</p></div>
     ${p.parts.map((_,i)=>examPart(p,i)).join('')}
     <div class="pnext"><span class="mute">${last?'마지막 문제예요. 제출하면 수정할 수 없어요.':'다음으로 넘어가면 이 문제로 돌아올 수 없어요.'}</span>${last?(ex.confirm?`<span class="row"><button class="btn g" data-act="exCancel">더 쓸래요</button><button class="btn big" data-act="exSubmit">정말 제출</button></span>`:`<button class="btn big" data-act="exAsk">답안 제출</button>`):`<button class="btn big" data-act="exNext">다음 문제 →</button>`}</div></article>`;
   }
-  const sc=exScore(),mx=ex.items.length*3;
+  const sc=exScore(),mx=ex.items.reduce((a,q)=>a+q.parts.length,0);
   return hero()+tabsBar('')+`<div class="card" style="background:var(--hero2)"><div class="row sp"><div><h3>채점 결과</h3><p class="desc">자동 판정이 반영됐어요. 서술·코드는 모범 답안과 비교해 ○/✕를 직접 고쳐 보세요.</p></div><div class="score">${sc}<span class="mute" style="font-size:20px"> / ${mx}</span></div></div><div class="row"><button class="btn" data-act="exAgain">같은 범위 다시</button><button class="btn g" data-act="exEnd">로비로</button><button class="btn g" data-act="go" data-v="notes">📒 오답노트</button></div></div>`
     +ex.items.map((p,i)=>probHTML('ex',p,'review','문제 '+(i+1)+'.')).join('');
 }
@@ -1630,7 +1654,7 @@ function exSubmit(){
   ex.items.forEach(p=>p.parts.forEach((pt,i)=>{const key='ex|'+p.id+'|'+i;GR[key]=autoGrade(pt,key)?1:0;
     const g=store.pg[p.id]||[null,null,null];g[i]=GR[key];store.pg[p.id]=g;
     if(GR[key]===0)store.wrong[p.id+':'+i]={t:Date.now(),a:ansText(key,pt)};else delete store.wrong[p.id+':'+i]}));
-  store.hist.push({t:Date.now(),u:ex.u,score:exScore(),max:ex.items.length*3});ex.hid=store.hist.length-1;save();render();window.scrollTo(0,0)}
+  store.hist.push({t:Date.now(),u:ex.u,score:exScore(),max:ex.items.reduce((a,q)=>a+q.parts.length,0)});ex.hid=store.hist.length-1;save();render();window.scrollTo(0,0)}
 function exStart(){clearInterval(timerId);
   [ANS,INP,GR,CHK,ORDSH,MSG].forEach(o=>Object.keys(o).filter(k=>k.startsWith('ex|')).forEach(k=>delete o[k]));
   ex={u:exU,items:pickExam(exU),cur:0,phase:'run',end:exT?Date.now()+exT*60000:null,confirm:false};
@@ -1717,3 +1741,6 @@ window.addEventListener('hashchange',()=>{const v=location.hash.slice(1);if(VF[v
 {const v=location.hash.slice(1);if(VF[v])view=v}
 render();
 </script>
+
+</body>
+</html>
