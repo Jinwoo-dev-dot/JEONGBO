@@ -186,6 +186,21 @@ textarea:focus,input[type=text]:focus,input[type=number]:focus{outline:2px solid
   .qrow{grid-template-columns:minmax(0,1fr)}.ql{border-right:0;padding-right:0;border-bottom:1px dotted var(--paperline)}.qr{padding-left:0}
   .paper{padding:16px 16px 20px}.hero h1{font-size:22px}.hero{padding:16px}.homegrid{grid-template-columns:minmax(0,1fr)}.hbtn{min-height:0;padding:20px}
 }
+@media (max-width:600px){
+  body{font-size:18px;line-height:1.75}
+  .hero h1{font-size:25px}.hlab{font-size:14px}
+  .tab{font-size:16.5px;padding:10px 16px}.chip{font-size:16px;padding:7px 15px}
+  .desc,.mute,.note{font-size:15.5px}
+  .sec>h3{font-size:21px}.sc .tx,.cz .tx{font-size:18px}.sc .no,.cz .no{min-width:30px;height:30px;font-size:14px}
+  table{font-size:16px}pre{font-size:15px}code{font-size:.9em}
+  .btn{font-size:17px;padding:12px 20px}.btn.big{font-size:18px}
+  .fin{font-size:17px;padding:3px 7px}.fx{font-size:15px}
+  .qh,.fields label,.qr label.al{font-size:17px}.qr .lab{font-size:14.5px}.ql .qt{font-size:17.5px}
+  .paper{font-size:17px}.pq h2{font-size:21px}.pq p{font-size:16.5px}
+  textarea{font-size:16.5px}select{font-size:17px}
+  .tag{font-size:14px}.kd{font-size:13px}.hbtn b{font-size:24px}.hbtn span{font-size:16px}
+  .bm{font-size:14px}.timer{font-size:18px}
+}
 </style>
 <style>html{padding-top:env(safe-area-inset-top,0px)}</style>
 </head>
@@ -193,6 +208,7 @@ textarea:focus,input[type=text]:focus,input[type=number]:focus{outline:2px solid
 
 <div class="wrap" id="root"></div>
 <script>
+try{const sw=screen.width,iw=window.innerWidth;if(sw<=520&&iw>sw*1.4){document.documentElement.style.zoom=iw/sw}}catch(e){}
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const num=n=>'re:(^|[^0-9])'+n+'([^0-9]|$)';
